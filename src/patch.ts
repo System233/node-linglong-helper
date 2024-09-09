@@ -5,11 +5,8 @@
 
 import { Command } from "commander";
 import { install, installPatches } from "./utils.js";
-import { constants, writeFile } from "fs/promises";
-import { INSTALL_PATCH_SCRIPT } from "./constant.js";
 
 const allPatches = {
-  desktop: "应用快捷方式补丁",
   ld: "LD_LIBRARY_PATH 补丁",
   glib: "Glib typelib,schemas 补丁",
   java: "JAVA环境补丁",
