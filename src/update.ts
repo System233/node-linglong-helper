@@ -3,9 +3,18 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
 
-import { loadDepList, loadSourcesList, loadYAML, saveYAML } from "./utils.js";
+import {
+  loadBasePackages,
+  loadDepList,
+  loadRuntimePackages,
+  loadSourcesList,
+  loadYAML,
+  saveDepList,
+  savePackages,
+  saveYAML,
+} from "./utils.js";
 import { IProject } from "./interface.js";
-import { LINGLONG_YAML } from "./constant.js";
+import { DEP_LIST_GENERATED, LINGLONG_YAML } from "./constant.js";
 import { Command } from "commander";
 import { PackageManager, parseSourceEnrty } from "apt-cli";
 import { flat } from "./apt.js";
@@ -44,13 +53,27 @@ const update = async (opt: CLIUpdateOption) => {
       })
     )
   );
+
   const proj = await loadYAML<IProject>(LINGLONG_YAML);
-  proj.sources = packages.map((item) => ({
+
+  const [basePackages, runtimePackages] = await Promise.all([
+    loadBasePackages(),
+    proj.runtime ? await loadRuntimePackages() : [],
+  ]);
+  const envPackages = new Set(basePackages.concat(runtimePackages));
+  const filteredPackages = packages.filter(
+    (item) => !envPackages.has(item.package)
+  );
+  proj.sources = filteredPackages.map((item) => ({
     kind: "file",
     url: new URL(item.filename, item.repository.url).toString(),
     digest: item.hash.sha256,
   }));
   await saveYAML(LINGLONG_YAML, proj, IProject);
+  await savePackages(
+    DEP_LIST_GENERATED,
+    Array.from(filteredPackages, (x) => `${x.package}`)
+  );
 };
 
 export const updateCommand = new Command("update")
