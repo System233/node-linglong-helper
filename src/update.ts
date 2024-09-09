@@ -86,8 +86,8 @@ const update = async (opt: CLIUpdateOption) => {
 
 export const updateCommand = new Command("update")
   .description("更新玲珑项目依赖")
-  .option("-d,--depend <...depends>", "追加依赖列表", (x, y) => y.concat(x), [])
-  .option("--entry <...entry>", "APT源条目", (x, y) => y.concat(x), [])
+  .option("-d,--depend <depends...>", "追加依赖列表", (x, y) => y.concat(x), [])
+  .option("-e,--entry <entry...>", "APT源条目", (x, y) => y.concat(x), [])
   .option("--cacheDir <cacheDir>", "APT缓存目录", ".cache")
   .option("--with-runtime", "引入默认org.deepin.Runtime")
   .option("--name <name>", "应用名称")

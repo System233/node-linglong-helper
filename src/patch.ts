@@ -8,7 +8,7 @@ import { install } from "./utils.js";
 import { constants, writeFile } from "fs/promises";
 import { INSTALL_PATCH_SCRIPT } from "./constant.js";
 
-export const patch = async (patches: string) => {
+export const patch = async (patches: string[]) => {
   for (const name of patches) {
     try {
       const patch = `\n./patch_${name}.sh`;
@@ -33,9 +33,9 @@ const patches = {
   icon: "图标补丁",
 };
 const description = Object.entries(patches)
-  .map(([id, desc]) => ` ${id}\t\t${desc}`)
+  .map(([id, desc]) => ` - ${id}\t\t${desc}`)
   .join("\n");
 export const patchCommand = new Command("patch")
-  .description(`添加应用补丁: \n${description}`)
-  .argument(`<id>`, `补丁ID列表`)
+  .description(`添加应用补丁`)
+  .argument(`<name...>`, `补丁列表:\n${description}`, (y, x) => x.concat(y), [])
   .action(patch);

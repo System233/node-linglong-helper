@@ -87,7 +87,7 @@ export const create = async (rawId: string, opt: CLICreateOption) => {
 export const command = new Command("create")
   .description("创建玲珑包工程")
   .argument("<id>", "包名")
-  .option("-d,--depend <...depends>", "依赖列表", (x, y) => y.concat(x), [])
+  .option("-d,--depend <depends...>", "依赖列表", (x, y) => y.concat(x), [])
   .option("--with-runtime", "引入默认org.deepin.Runtime")
   .option("--name <name>", "应用名称", "App Name")
   .option("--kind <app|runtime>", "应用类型", "app")
