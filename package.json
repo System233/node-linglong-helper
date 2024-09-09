@@ -26,5 +26,12 @@
     "@types/node": "^22.5.4",
     "tsx": "^4.19.0",
     "typescript": "^5.5.4"
-  }
+  },
+  "keywords": [
+    "linglong",
+    "linyaps",
+    "linglong-helper",
+    "ll-helper",
+    "ll-builder"
+  ]
 }
