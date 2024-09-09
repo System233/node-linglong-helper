@@ -16,6 +16,7 @@ import {
   SOURCES_LIST,
 } from "./constant.js";
 import { join } from "path";
+import { fileURLToPath } from "node:url";
 
 export const getLinyapsName = (x: string) =>
   x.endsWith(".linyaps") ? x : `${x}.linyaps`;
@@ -93,9 +94,21 @@ export const savePackages = async (listFile: string, packages: string[]) => {
   await writeFile(listFile, packages.join("\n"));
 };
 export const loadRuntimePackages = () =>
-  loadPackages(join(import.meta.dirname, "..", LINGLONG_RUNTIME_PACKAGE_LIST));
+  loadPackages(
+    join(
+      fileURLToPath(import.meta.resolve(".")),
+      "..",
+      LINGLONG_RUNTIME_PACKAGE_LIST
+    )
+  );
 export const loadBasePackages = () =>
-  loadPackages(join(import.meta.dirname, "..", LINGLONG_BASE_PACKAGE_LIST));
+  loadPackages(
+    join(
+      fileURLToPath(import.meta.resolve(".")),
+      "..",
+      LINGLONG_BASE_PACKAGE_LIST
+    )
+  );
 
 export const loadDepList = (root?: string) =>
   loadPackages(joinRoot(DEP_LIST, root));
