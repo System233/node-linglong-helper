@@ -8,10 +8,19 @@ import { install } from "./utils.js";
 import { constants, writeFile } from "fs/promises";
 import { INSTALL_PATCH_SCRIPT } from "./constant.js";
 
+const allPatches = {
+  desktop: "应用快捷方式补丁",
+  ld: "LD_LIBRARY_PATH 补丁",
+  glib: "Glib typelib,schemas 补丁",
+  java: "JAVA环境补丁",
+  qt: "QT环境补丁",
+  mono: "MONO环境补丁",
+  icon: "图标补丁",
+};
 export const patch = async (patches: string[]) => {
   for (const name of patches) {
     try {
-      if (!(name in patches)) {
+      if (!(name in allPatches)) {
         console.error(`不支持补丁${name}`);
         continue;
       }
@@ -27,16 +36,7 @@ export const patch = async (patches: string[]) => {
     }
   }
 };
-const patches = {
-  desktop: "应用快捷方式补丁",
-  ld: "LD_LIBRARY_PATH 补丁",
-  glib: "Glib typelib,schemas 补丁",
-  java: "JAVA环境补丁",
-  qt: "QT环境补丁",
-  mono: "MONO环境补丁",
-  icon: "图标补丁",
-};
-const description = Object.entries(patches)
+const description = Object.entries(allPatches)
   .map(([id, desc]) => ` - ${id}\t\t${desc}`)
   .join("\n");
 export const patchCommand = new Command("patch")
