@@ -11,15 +11,19 @@ import { INSTALL_PATCH_SCRIPT } from "./constant.js";
 export const patch = async (patches: string[]) => {
   for (const name of patches) {
     try {
+      if (!(name in patches)) {
+        console.error(`不支持补丁${name}`);
+        continue;
+      }
       const patch = `./patch_${name}.sh`;
       const ok = await install(patch);
       if (ok) {
-        await writeFile(INSTALL_PATCH_SCRIPT, patch, {
-          flag: constants.O_APPEND | constants.O_CREAT,
+        await writeFile(INSTALL_PATCH_SCRIPT, `\n${patch}`, {
+          flag: constants.O_APPEND | constants.O_CREAT | constants.O_WRONLY,
         });
       }
     } catch (error) {
-      console.error(`不支持补丁${name}`, error);
+      console.error(`补丁失败：${name}`, error);
     }
   }
 };
