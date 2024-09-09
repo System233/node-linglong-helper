@@ -3,7 +3,15 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
 
-import { mkdir, readFile, rm, writeFile } from "fs/promises";
+import {
+  chmod,
+  constants,
+  copyFile,
+  mkdir,
+  readFile,
+  rm,
+  writeFile,
+} from "fs/promises";
 import yaml from "yaml";
 import { IProject } from "./interface.js";
 import { plainToInstance } from "class-transformer";
@@ -89,6 +97,8 @@ export const loadPackages = async (listFile: string, noWarn?: boolean) => {
     return [];
   }
 };
+export const resolveAsset = (name: string) =>
+  join(fileURLToPath(import.meta.resolve(".")), "../assets", name);
 
 export const joinRoot = (file: string, root?: string) =>
   root ? join(root, file) : file;
@@ -96,21 +106,9 @@ export const savePackages = async (listFile: string, packages: string[]) => {
   await writeFile(listFile, packages.join("\n"));
 };
 export const loadRuntimePackages = () =>
-  loadPackages(
-    join(
-      fileURLToPath(import.meta.resolve(".")),
-      "..",
-      LINGLONG_RUNTIME_PACKAGE_LIST
-    )
-  );
+  loadPackages(resolveAsset(LINGLONG_RUNTIME_PACKAGE_LIST));
 export const loadBasePackages = () =>
-  loadPackages(
-    join(
-      fileURLToPath(import.meta.resolve(".")),
-      "..",
-      LINGLONG_BASE_PACKAGE_LIST
-    )
-  );
+  loadPackages(join(resolveAsset(LINGLONG_BASE_PACKAGE_LIST)));
 
 export const loadDepList = (root?: string) =>
   loadPackages(joinRoot(DEP_LIST, root));
@@ -152,4 +150,11 @@ export const lockPorjectDir = async (
     await rm(id, { recursive: true });
     process.exit(1);
   }
+};
+
+export const install = async (name: string, root?: string) => {
+  const path = resolveAsset(name);
+  const dest = joinRoot(name, root);
+  await copyFile(path, dest, constants.COPYFILE_EXCL);
+  await chmod(dest, "+x");
 };

@@ -5,6 +5,7 @@
 
 import {
   getLinyapsName,
+  install,
   lockPorjectDir,
   saveDepList,
   saveYAML,
@@ -14,6 +15,8 @@ import { join } from "path";
 import { IProject } from "./interface.js";
 import {
   BIN_NAME,
+  BUILD_SCRIPT,
+  INSTALL_DEP_SCRIPT,
   LINGLONG_BASE_DEFAULT,
   LINGLONG_RUNTIME_DEFAULT,
   LINGLONG_YAML,
@@ -56,17 +59,19 @@ export const create = async (rawId: string, opt: CLICreateOption) => {
           opt.runtime || opt.withRuntime ? LINGLONG_RUNTIME_DEFAULT : undefined,
         build: [
           `export LINGLONG_RAW_ID=${JSON.stringify(opt.id)}`,
-          `export LINGLONG_PKG_ID=${JSON.stringify(id)}`,
+          `export LINGLONG_APP_ID=${JSON.stringify(id)}`,
           `export LINGLONG_APP_NAME=${JSON.stringify(opt.name)}`,
           `export LINGLONG_APP_VERSION=${JSON.stringify(opt.version)}`,
           `export LINGLONG_APP_KIND=${JSON.stringify(opt.kind)}`,
           `export LINGLONG_APP_DESC=${JSON.stringify(opt.description)}`,
           `export LINGLONG_COMMAND=${JSON.stringify(cmd)}`,
-          "exec /project/build.sh",
+          `exec /project/${BUILD_SCRIPT}`,
         ].join("\n"),
       });
       await saveYAML<IProject>(yamlFile, proj);
       await saveDepList(opt.depend, id);
+      await install(INSTALL_DEP_SCRIPT, id);
+      await install(BUILD_SCRIPT, id);
       console.log(
         `已创建项目:${id}, 可通过以下命令进行初始化:\n\tcd ${id};\n\t${BIN_NAME} update`
       );

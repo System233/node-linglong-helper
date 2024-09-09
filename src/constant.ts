@@ -16,3 +16,5 @@ export const LINGLONG_RUNTIME_DEFAULT = "org.deepin.Runtime/23.0.1";
 
 export const LINGLONG_RUNTIME_PACKAGE_LIST = "x86_64.runtime.packages.list";
 export const LINGLONG_BASE_PACKAGE_LIST = "x86_64.base.packages.list";
+export const BUILD_SCRIPT = "build.sh";
+export const INSTALL_DEP_SCRIPT = "install_dep.sh";
