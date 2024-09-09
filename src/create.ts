@@ -3,9 +3,7 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
 
-import { access, constants, mkdir, rmdir, writeFile } from "fs/promises";
 import {
-  createPorjectDir,
   getLinyapsName,
   lockPorjectDir,
   saveDepList,
@@ -16,14 +14,12 @@ import { join } from "path";
 import { IProject } from "./interface.js";
 import {
   BIN_NAME,
-  DEP_LIST,
   LINGLONG_BASE_DEFAULT,
   LINGLONG_RUNTIME_DEFAULT,
   LINGLONG_YAML,
   LINGLONG_YAML_VERSION,
 } from "./constant.js";
 import { Command } from "commander";
-import { inspect } from "util";
 
 export interface CLICreateOption {
   id: string;
@@ -65,7 +61,6 @@ export const create = async (rawId: string, opt: CLICreateOption) => {
           `export LINGLONG_APP_VERSION=${JSON.stringify(opt.version)}`,
           `export LINGLONG_APP_KIND=${JSON.stringify(opt.kind)}`,
           `export LINGLONG_APP_DESC=${JSON.stringify(opt.description)}`,
-          `export LINGLONG_APP_VERSION=${JSON.stringify(opt.version)}`,
           `export LINGLONG_COMMAND=${JSON.stringify(cmd)}`,
           "exec /project/build.sh",
         ].join("\n"),
@@ -73,7 +68,7 @@ export const create = async (rawId: string, opt: CLICreateOption) => {
       await saveYAML<IProject>(yamlFile, proj);
       await saveDepList(opt.depend, id);
       console.log(
-        `已创建项目:${id}, 通过以下命令进行初始化:\n> cd ${id};\n> ${BIN_NAME} update`
+        `已创建项目:${id}, 可通过以下命令进行初始化:\n\tcd ${id};\n\t${BIN_NAME} update`
       );
     },
     opt.nolock
