@@ -1,0 +1,6 @@
+node_modules
+tests
+src
+*.tar
+*.gz
+*.log

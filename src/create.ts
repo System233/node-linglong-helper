@@ -1,0 +1,94 @@
+// Copyright (c) 2024 System233
+//
+// This software is released under the MIT License.
+// https://opensource.org/licenses/MIT
+
+import { access, constants, mkdir, rmdir, writeFile } from "fs/promises";
+import {
+  createPorjectDir,
+  getLinyapsName,
+  lockPorjectDir,
+  saveDepList,
+  saveYAML,
+  validateYAML,
+} from "./utils.js";
+import { join } from "path";
+import { IProject } from "./interface.js";
+import {
+  BIN_NAME,
+  DEP_LIST,
+  LINGLONG_BASE_DEFAULT,
+  LINGLONG_RUNTIME_DEFAULT,
+  LINGLONG_YAML,
+  LINGLONG_YAML_VERSION,
+} from "./constant.js";
+import { Command } from "commander";
+import { inspect } from "util";
+
+export interface CLICreateOption {
+  id: string;
+  name: string;
+  version: string;
+  depend: string[];
+  kind: "app" | "runtime";
+  withRuntime: boolean;
+  description: string;
+  base: string;
+  runtime: string;
+  nolock: boolean;
+}
+export const create = async (rawId: string, opt: CLICreateOption) => {
+  opt.id = rawId;
+  const id = getLinyapsName(opt.id);
+  await lockPorjectDir(
+    id,
+    async () => {
+      const yamlFile = join(id, LINGLONG_YAML);
+      const cmd = `/opt/apps/${id}/files/bin/start.sh`;
+      const proj: IProject = await validateYAML({
+        version: LINGLONG_YAML_VERSION,
+        package: {
+          id,
+          name: opt.name,
+          version: opt.version,
+          kind: opt.kind,
+          description: opt.description,
+        },
+        command: [cmd],
+        base: opt.base || LINGLONG_BASE_DEFAULT,
+        runtime:
+          opt.runtime || opt.withRuntime ? LINGLONG_RUNTIME_DEFAULT : undefined,
+        build: [
+          `export LINGLONG_RAW_ID=${JSON.stringify(opt.id)}`,
+          `export LINGLONG_PKG_ID=${JSON.stringify(id)}`,
+          `export LINGLONG_APP_NAME=${JSON.stringify(opt.name)}`,
+          `export LINGLONG_APP_VERSION=${JSON.stringify(opt.version)}`,
+          `export LINGLONG_APP_KIND=${JSON.stringify(opt.kind)}`,
+          `export LINGLONG_APP_DESC=${JSON.stringify(opt.description)}`,
+          `export LINGLONG_APP_VERSION=${JSON.stringify(opt.version)}`,
+          `export LINGLONG_COMMAND=${JSON.stringify(cmd)}`,
+          "exec /project/build.sh",
+        ].join("\n"),
+      });
+      await saveYAML<IProject>(yamlFile, proj);
+      await saveDepList(opt.depend, id);
+      console.log(
+        `已创建项目:${id}, 通过以下命令进行初始化:\n> cd ${id};\n> ${BIN_NAME} update`
+      );
+    },
+    opt.nolock
+  );
+};
+
+export const command = new Command("create")
+  .description("创建玲珑包工程")
+  .argument("<id>", "包名")
+  .option("-d,--depend <...depends>", "依赖列表", (x, y) => y.concat(x), [])
+  .option("--with-runtime", "引入默认org.deepin.Runtime")
+  .option("--name <name>", "应用名称", "App Name")
+  .option("--kind <app|runtime>", "应用类型", "app")
+  .option("--version <x.x.x.x>", "版本号", "0.0.0.1")
+  .option("--description <description>", "应用说明", "Description")
+  .option("--base <package/version>", "基础依赖包")
+  .option("--runtime <package/version>", "Runtime依赖包")
+  .action(create);
