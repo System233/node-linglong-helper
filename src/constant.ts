@@ -20,3 +20,5 @@ export const BUILD_SCRIPT = "build.sh";
 export const INSTALL_PATCH_SCRIPT = "install_patch.sh";
 export const INSTALL_DEP_SCRIPT = "install_dep.sh";
 export const INSTALL_START_SCRIPT = "install_start.sh";
+
+export const SHEBANG='#!/bin/bash'

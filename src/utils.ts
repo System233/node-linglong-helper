@@ -23,6 +23,8 @@ import {
   LINGLONG_BASE_PACKAGE_LIST,
   LINGLONG_RUNTIME_PACKAGE_LIST,
   SOURCES_LIST,
+  INSTALL_PATCH_SCRIPT,
+  SHEBANG,
 } from "./constant.js";
 import { join } from "path";
 import { fileURLToPath } from "node:url";
@@ -169,4 +171,17 @@ export const install = async (name: string, root?: string) => {
   await copyFile(path, dest, constants.COPYFILE_EXCL);
   await chmod(dest, "755");
   return true;
+};
+
+export const installPatches = async (patches: string[], root?: string) => {
+  const dest = joinRoot(INSTALL_PATCH_SCRIPT, root);
+  const shebang = (await exists(dest)) ? "" : SHEBANG;
+
+  await writeFile(
+    INSTALL_PATCH_SCRIPT,
+    [].concat(shebang, patches).join("\n"),
+    {
+      flag: constants.O_APPEND | constants.O_CREAT | constants.O_WRONLY,
+    }
+  );
 };

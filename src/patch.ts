@@ -4,7 +4,7 @@
 // https://opensource.org/licenses/MIT
 
 import { Command } from "commander";
-import { install } from "./utils.js";
+import { install, installPatches } from "./utils.js";
 import { constants, writeFile } from "fs/promises";
 import { INSTALL_PATCH_SCRIPT } from "./constant.js";
 
@@ -18,23 +18,23 @@ const allPatches = {
   icon: "图标补丁",
 };
 export const patch = async (patches: string[]) => {
-  for (const name of patches) {
-    try {
+  const list = await Promise.all(
+    patches.map(async (name) => {
       if (!(name in allPatches)) {
-        console.error(`不支持补丁${name}`);
-        continue;
+        console.error(`不支持补丁`, name);
+        return null;
       }
       const patch = `./patch_${name}.sh`;
       const ok = await install(patch);
       if (ok) {
-        await writeFile(INSTALL_PATCH_SCRIPT, `\n${patch}`, {
-          flag: constants.O_APPEND | constants.O_CREAT | constants.O_WRONLY,
-        });
+        console.log("已添加补丁", name);
+      } else {
+        console.log("已跳过补丁", name);
       }
-    } catch (error) {
-      console.error(`补丁失败：${name}`, error);
-    }
-  }
+      return ok ? patch : null;
+    })
+  );
+  await installPatches(list.filter((x) => x != null));
 };
 const description = Object.entries(allPatches)
   .map(([id, desc]) => ` - ${id}\t\t${desc}`)
