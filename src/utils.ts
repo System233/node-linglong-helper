@@ -177,11 +177,8 @@ export const installPatches = async (patches: string[], root?: string) => {
   const dest = joinRoot(INSTALL_PATCH_SCRIPT, root);
   const shebang = (await exists(dest)) ? "" : SHEBANG;
 
-  await writeFile(
-    INSTALL_PATCH_SCRIPT,
-    [].concat(shebang, patches).join("\n"),
-    {
-      flag: constants.O_APPEND | constants.O_CREAT | constants.O_WRONLY,
-    }
-  );
+  await writeFile(dest, [].concat(shebang, patches).join("\n"), {
+    flag: constants.O_APPEND | constants.O_CREAT | constants.O_WRONLY,
+  });
+  await chmod(dest, "755");
 };
