@@ -11,7 +11,7 @@ import { INSTALL_PATCH_SCRIPT } from "./constant.js";
 export const patch = async (patches: string[]) => {
   for (const name of patches) {
     try {
-      const patch = `\n./patch_${name}.sh`;
+      const patch = `./patch_${name}.sh`;
       const ok = await install(patch);
       if (ok) {
         await writeFile(INSTALL_PATCH_SCRIPT, patch, {
@@ -19,7 +19,7 @@ export const patch = async (patches: string[]) => {
         });
       }
     } catch (error) {
-      console.error(`不支持补丁${name}`);
+      console.error(`不支持补丁${name}`, error);
     }
   }
 };

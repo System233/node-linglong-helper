@@ -99,7 +99,7 @@ export const loadPackages = async (listFile: string, noWarn?: boolean) => {
   }
 };
 export const resolveAsset = (name: string) =>
-  join(fileURLToPath(import.meta.resolve(".")), "../assets", name);
+  join(fileURLToPath(import.meta.resolve("..")), "../assets", name);
 
 export const joinRoot = (file: string, root?: string) =>
   root ? join(root, file) : file;
@@ -167,6 +167,6 @@ export const install = async (name: string, root?: string) => {
     return false;
   }
   await copyFile(path, dest, constants.COPYFILE_EXCL);
-  await chmod(dest, "+x");
+  await chmod(dest, "755");
   return true;
 };
