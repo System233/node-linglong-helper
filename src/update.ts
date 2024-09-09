@@ -59,7 +59,7 @@ const update = async (opt: CLIUpdateOption) => {
   const [basePackages, runtimePackages, excludePackages] = await Promise.all([
     loadBasePackages(),
     proj.runtime ? loadRuntimePackages() : [],
-    loadExcludeDepList(),
+    loadExcludeDepList(null,true),
   ]);
   const envPackages = new Set(
     [].concat(basePackages, runtimePackages, excludePackages)
