@@ -5,6 +5,7 @@
 
 export const BIN_NAME = "ll-helper";
 export const DEP_LIST = "deps.list";
+export const DEP_EXCLUDE_LIST = "deps.exclude.list";
 export const DEP_LIST_GENERATED = "deps.list.generated";
 export const SOURCES_LIST = "sources.list";
 export const LINGLONG_YAML = "linglong.yaml";

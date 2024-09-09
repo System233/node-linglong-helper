@@ -3,14 +3,14 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
 
-import { mkdir, readFile, rm, rmdir, writeFile } from "fs/promises";
+import { mkdir, readFile, rm, writeFile } from "fs/promises";
 import yaml from "yaml";
 import { IProject } from "./interface.js";
 import { plainToInstance } from "class-transformer";
-import { validate, validateOrReject, ValidationError } from "class-validator";
-import { parsePackageVersionString } from "apt-cli";
+import { validate, ValidationError } from "class-validator";
 import {
   DEP_LIST,
+  DEP_EXCLUDE_LIST,
   LINGLONG_BASE_PACKAGE_LIST,
   LINGLONG_RUNTIME_PACKAGE_LIST,
   SOURCES_LIST,
@@ -75,7 +75,7 @@ export const normalizeVersion = (version: string) => {
   return segments.map((x) => parseInt(x)).join(".");
 };
 
-export const loadPackages = async (listFile: string) => {
+export const loadPackages = async (listFile: string, noWarn?: boolean) => {
   try {
     const data = await readFile(listFile, "utf8");
     return data
@@ -83,7 +83,9 @@ export const loadPackages = async (listFile: string) => {
       .map((x) => x.trim())
       .filter((x) => x.length);
   } catch (err) {
-    console.warn(`无法加载: ${JSON.stringify(listFile)}`);
+    if (!noWarn) {
+      console.warn(`无法加载: ${JSON.stringify(listFile)}`);
+    }
     return [];
   }
 };
@@ -112,6 +114,12 @@ export const loadBasePackages = () =>
 
 export const loadDepList = (root?: string) =>
   loadPackages(joinRoot(DEP_LIST, root));
+
+export const loadExcludeDepList = (root?: string, noWarn?: boolean) =>
+  loadPackages(joinRoot(DEP_EXCLUDE_LIST, root), noWarn);
+export const saveExcludeDepList = (deps: string[], root?: string) =>
+  savePackages(joinRoot(DEP_EXCLUDE_LIST, root), deps);
+
 export const saveDepList = (deps: string[], root?: string) =>
   savePackages(joinRoot(DEP_LIST, root), deps);
 

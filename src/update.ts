@@ -6,10 +6,10 @@
 import {
   loadBasePackages,
   loadDepList,
+  loadExcludeDepList,
   loadRuntimePackages,
   loadSourcesList,
   loadYAML,
-  saveDepList,
   savePackages,
   saveYAML,
 } from "./utils.js";
@@ -56,14 +56,22 @@ const update = async (opt: CLIUpdateOption) => {
 
   const proj = await loadYAML<IProject>(LINGLONG_YAML);
 
-  const [basePackages, runtimePackages] = await Promise.all([
+  const [basePackages, runtimePackages, excludePackages] = await Promise.all([
     loadBasePackages(),
-    proj.runtime ? await loadRuntimePackages() : [],
+    proj.runtime ? loadRuntimePackages() : [],
+    loadExcludeDepList(),
   ]);
-  const envPackages = new Set(basePackages.concat(runtimePackages));
-  const filteredPackages = packages.filter(
-    (item) => !envPackages.has(item.package)
+  const envPackages = new Set(
+    [].concat(basePackages, runtimePackages, excludePackages)
   );
+  const uniquePackage = new Set();
+  const filteredPackages = packages.filter((item) => {
+    if (envPackages.has(item.package) || uniquePackage.has(item.package)) {
+      return false;
+    }
+    uniquePackage.add(item.package);
+    return true;
+  });
   proj.sources = filteredPackages.map((item) => ({
     kind: "file",
     url: new URL(item.filename, item.repository.url).toString(),
