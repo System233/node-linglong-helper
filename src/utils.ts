@@ -99,7 +99,7 @@ export const loadPackages = async (listFile: string, noWarn?: boolean) => {
   }
 };
 export const resolveAsset = (name: string) =>
-  join(fileURLToPath(import.meta.resolve("..")), "../assets", name);
+  join(fileURLToPath(import.meta.resolve(".")), "../assets", name);
 
 export const joinRoot = (file: string, root?: string) =>
   root ? join(root, file) : file;
