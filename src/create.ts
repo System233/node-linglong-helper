@@ -17,6 +17,7 @@ import {
   BIN_NAME,
   BUILD_SCRIPT,
   INSTALL_DEP_SCRIPT,
+  INSTALL_START_SCRIPT,
   LINGLONG_BASE_DEFAULT,
   LINGLONG_RUNTIME_DEFAULT,
   LINGLONG_YAML,
@@ -70,8 +71,11 @@ export const create = async (rawId: string, opt: CLICreateOption) => {
       });
       await saveYAML<IProject>(yamlFile, proj);
       await saveDepList(opt.depend, id);
-      await install(INSTALL_DEP_SCRIPT, id);
-      await install(BUILD_SCRIPT, id);
+      await Promise.all([
+        install(INSTALL_DEP_SCRIPT, id),
+        install(INSTALL_START_SCRIPT, id),
+        install(BUILD_SCRIPT, id),
+      ]);
       console.log(
         `已创建项目:${id}, 可通过以下命令进行初始化:\n\tcd ${id};\n\t${BIN_NAME} update`
       );

@@ -4,6 +4,7 @@
 // https://opensource.org/licenses/MIT
 
 import {
+  access,
   chmod,
   constants,
   copyFile,
@@ -151,10 +152,21 @@ export const lockPorjectDir = async (
     process.exit(1);
   }
 };
-
+export const exists = async (path: string) => {
+  try {
+    await access(path);
+    return true;
+  } catch (error) {
+    return false;
+  }
+};
 export const install = async (name: string, root?: string) => {
   const path = resolveAsset(name);
   const dest = joinRoot(name, root);
+  if (await exists(dest)) {
+    return false;
+  }
   await copyFile(path, dest, constants.COPYFILE_EXCL);
   await chmod(dest, "+x");
+  return true;
 };

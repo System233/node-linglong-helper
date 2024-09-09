@@ -8,8 +8,10 @@ import { program } from "commander";
 import { command as createCommand } from "./create.js";
 import { convertCommand } from "./convert.js";
 import { updateCommand } from "./update.js";
+import { patchCommand } from "./patch.js";
 program
   .addCommand(createCommand)
   .addCommand(convertCommand)
   .addCommand(updateCommand)
+  .addCommand(patchCommand)
   .parse();
