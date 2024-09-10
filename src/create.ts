@@ -50,7 +50,7 @@ export interface CLICreateOption {
   boot?: string;
   baseListFile?: string;
   runtimeListFile?: string;
-  authConf: [];
+  authConf: string[];
 }
 export const create = async (rawId: string, opt: CLICreateOption) => {
   opt.id = rawId;

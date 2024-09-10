@@ -10,6 +10,7 @@
 
 import {
   getLinyapsName,
+  loadAuthConf,
   loadPackages,
   lockPorjectDir,
   normalizeVersion,
@@ -41,7 +42,7 @@ export interface CLIConvertOption {
   boot?: string;
   baseListFile?: string;
   runtimeListFile?: string;
-  authConf: [];
+  authConf: string[];
 }
 const convert = async (rawId: string, opt: CLIConvertOption) => {
   opt.id = rawId;
@@ -60,6 +61,11 @@ const convert = async (rawId: string, opt: CLIConvertOption) => {
     entries.forEach((item) =>
       manager.repository.create(parseSourceEnrty(item))
     );
+
+    const authConf = (
+      await Promise.all(opt.authConf.map((item) => loadAuthConf(item)))
+    ).flat();
+    authConf.forEach((item) => manager.auth.conf.push(item));
 
     await manager.load();
 
