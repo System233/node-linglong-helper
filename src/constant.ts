@@ -15,7 +15,7 @@ export const AUTH_CONF = "auth.conf";
 export const LINGLONG_YAML = "linglong.yaml";
 export const LINGLONG_YAML_VERSION = "1.0";
 
-export const LINGLONG_BASE_DEFAULT = "org.deepin.foundation/23.0.1";
+export const LINGLONG_BASE_DEFAULT = "org.deepin.foundation/23.0.0";
 export const LINGLONG_RUNTIME_DEFAULT = "org.deepin.Runtime/23.0.1";
 export const LINGLONG_BOOT_DEFAULT = "bin/start.sh";
 
