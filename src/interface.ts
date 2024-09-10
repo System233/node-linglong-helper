@@ -97,3 +97,9 @@ export class IProject {
 
   [k: string]: any;
 }
+
+export interface APTAuthConf {
+  machine: string;
+  username: string;
+  password: string;
+}

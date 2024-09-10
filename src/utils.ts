@@ -14,12 +14,13 @@ import {
   writeFile,
 } from "fs/promises";
 import yaml from "yaml";
-import { IProject } from "./interface.js";
+import { APTAuthConf, IProject } from "./interface.js";
 import { plainToInstance } from "class-transformer";
 import { validate, ValidationError } from "class-validator";
 import { SOURCES_LIST, INSTALL_PATCH_SCRIPT, SHEBANG } from "./constant.js";
 import { basename, join } from "path";
 import { fileURLToPath } from "node:url";
+import { loadAPTAuthConf } from "apt-cli";
 
 export const getLinyapsName = (x: string) =>
   x.endsWith(".linyaps") ? x : `${x}.linyaps`;
@@ -169,4 +170,15 @@ export const installPatches = async (patches: string[], root?: string) => {
     flag: constants.O_APPEND | constants.O_CREAT | constants.O_WRONLY,
   });
   await chmod(dest, "755");
+};
+
+export const loadAuthConf = async (file: string, noWarn?: boolean) => {
+  try {
+    return await loadAPTAuthConf(file, noWarn);
+  } catch (error) {
+    if (noWarn) {
+      return [];
+    }
+    throw error;
+  }
 };

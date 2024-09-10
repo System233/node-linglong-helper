@@ -11,6 +11,7 @@ export const DEP_LIST_GENERATED = "deps.generated.list";
 export const DEP_LIST_ALL = "deps.all.list";
 
 export const SOURCES_LIST = "sources.list";
+export const AUTH_CONF = "auth.conf";
 export const LINGLONG_YAML = "linglong.yaml";
 export const LINGLONG_YAML_VERSION = "1.0";
 

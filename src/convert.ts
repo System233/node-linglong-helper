@@ -26,21 +26,22 @@ import {
 } from "./constant.js";
 
 export interface CLIConvertOption {
-  id: string;
-  name: string;
+  id?: string;
+  name?: string;
   depends: string[];
   entry: string[];
   entryList: string[];
   withRuntime: boolean;
-  runtime: string;
-  base: string;
-  cacheDir: string;
-  version: string;
+  runtime?: string;
+  base?: string;
+  cacheDir?: string;
+  version?: string;
   kind: "app" | "runtime";
-  description: string;
-  boot: string;
+  description?: string;
+  boot?: string;
   baseListFile?: string;
   runtimeListFile?: string;
+  authConf: [];
 }
 const convert = async (rawId: string, opt: CLIConvertOption) => {
   opt.id = rawId;
@@ -89,6 +90,7 @@ const convert = async (rawId: string, opt: CLIConvertOption) => {
       entry: entries,
       entryList: [],
       boot: opt.boot,
+      authConf: opt.authConf,
     });
   });
 };
@@ -101,6 +103,12 @@ export const convertCommand = new Command("convert")
   .option(
     "-f,--entry-list <entryList...>",
     "APT源条目文件",
+    (x, y) => y.concat(x),
+    []
+  )
+  .option(
+    "--auth-conf <authConf...>",
+    "APT auth.conf授权配置",
     (x, y) => y.concat(x),
     []
   )

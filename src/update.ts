@@ -4,6 +4,7 @@
 // https://opensource.org/licenses/MIT
 
 import {
+  loadAuthConf,
   loadPackages,
   loadSourcesList,
   loadYAML,
@@ -13,6 +14,7 @@ import {
 } from "./utils.js";
 import { IProject } from "./interface.js";
 import {
+  AUTH_CONF,
   DEP_EXCLUDE_LIST,
   DEP_INCLDUE_LIST,
   DEP_LIST,
@@ -28,27 +30,34 @@ import { PackageManager, parseSourceEnrty } from "apt-cli";
 import { flat } from "./apt.js";
 
 export interface CLIUpdateOption {
-  id: string;
-  name: string;
+  id?: string;
+  name?: string;
   depends: string[];
   entry: string[];
   withRuntime: boolean;
-  runtime: string;
-  base: string;
+  runtime?: string;
+  base?: string;
 
-  cacheDir: string;
-  version: string;
-  kind: "app" | "runtime";
-  description: string;
+  cacheDir?: string;
+  version?: string;
+  kind?: "app" | "runtime";
+  description?: string;
 
   baseListFile?: string;
   runtimeListFile?: string;
+  authConf?: string;
 }
+
 const update = async (opt: CLIUpdateOption) => {
   const manager = new PackageManager({ cacheDir: opt.cacheDir });
   const sourceList = await loadSourcesList();
   const entries = sourceList.concat(opt.entry);
+  const authConf = await loadAuthConf(
+    opt.authConf || AUTH_CONF,
+    !!opt.authConf
+  );
   entries.forEach((item) => manager.repository.create(parseSourceEnrty(item)));
+  authConf.forEach((item) => manager.auth.conf.push(item));
   await manager.load();
   const currentDeps = opt.depends.concat(await loadPackages(DEP_LIST));
   const packages = currentDeps.flatMap((item) => {
@@ -59,7 +68,6 @@ const update = async (opt: CLIUpdateOption) => {
     }
     return flat(pkg);
   });
-
   const proj = await loadYAML<IProject>(LINGLONG_YAML);
   const baseListFile =
     opt.baseListFile || (await resolveOrAsset(LINGLONG_BASE_PACKAGE_LIST));
@@ -108,6 +116,7 @@ export const updateCommand = new Command("update")
     []
   )
   .option("-e,--entry <entry...>", "追加APT源条目", (x, y) => y.concat(x), [])
+  .option("--auth-conf <authConf>", "APT auth.conf授权配置")
   .option("--cacheDir <cacheDir>", "APT缓存目录", ".cache")
   .option("--with-runtime", "引入默认org.deepin.Runtime")
   .option(

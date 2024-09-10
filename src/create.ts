@@ -18,6 +18,7 @@ import {
 import { join } from "path";
 import { IProject } from "./interface.js";
 import {
+  AUTH_CONF,
   BIN_NAME,
   BUILD_SCRIPT,
   DEP_LIST,
@@ -34,21 +35,22 @@ import {
 import { Command } from "commander";
 
 export interface CLICreateOption {
-  id: string;
-  name: string;
-  version: string;
+  id?: string;
+  name?: string;
+  version?: string;
   depends: string[];
   entry: string[];
   entryList: string[];
-  kind: "app" | "runtime";
+  kind?: "app" | "runtime";
   withRuntime: boolean;
-  description: string;
-  base: string;
-  runtime: string;
-  nolock: boolean;
-  boot: string;
+  description?: string;
+  base?: string;
+  runtime?: string;
+  nolock?: boolean;
+  boot?: string;
   baseListFile?: string;
   runtimeListFile?: string;
+  authConf: [];
 }
 export const create = async (rawId: string, opt: CLICreateOption) => {
   opt.id = rawId;
@@ -61,6 +63,9 @@ export const create = async (rawId: string, opt: CLICreateOption) => {
       );
       const entries = opt.entry.concat(listEntries.flat());
 
+      const authConf = (
+        await Promise.all(opt.authConf.map((item) => loadPackages(item)))
+      ).flat();
       const yamlFile = join(id, LINGLONG_YAML);
       const cmd = `/opt/apps/${id}/files/${opt.boot || LINGLONG_BOOT_DEFAULT}`;
       const proj: IProject = await validateYAML({
@@ -95,6 +100,7 @@ export const create = async (rawId: string, opt: CLICreateOption) => {
       await Promise.all([
         savePackages(joinRoot(SOURCES_LIST, id), entries),
         savePackages(joinRoot(DEP_LIST, id), opt.depends),
+        savePackages(joinRoot(AUTH_CONF, id), authConf),
         installAsset(INSTALL_DEP_SCRIPT, id),
         installAsset(INSTALL_START_SCRIPT, id),
         installAsset(BUILD_SCRIPT, id),
@@ -119,6 +125,12 @@ export const command = new Command("create")
   .option(
     "-f,--entry-list <entryList...>",
     "APT源条目文件",
+    (x, y) => y.concat(x),
+    []
+  )
+  .option(
+    "--auth-conf <authConf...>",
+    "APT auth.conf授权配置",
     (x, y) => y.concat(x),
     []
   )
