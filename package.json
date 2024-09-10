@@ -1,7 +1,7 @@
 {
   "name": "linglong-helper",
   "type": "module",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "description": "Linglong Helper CLI",
   "main": "dist/index.js",
   "repository": "git+https://github.com/System233/node-linglong-helper",
