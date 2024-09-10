@@ -4,6 +4,7 @@
 // https://opensource.org/licenses/MIT
 
 import {
+  joinURL,
   loadAuthConf,
   loadPackages,
   loadSourcesList,
@@ -90,7 +91,7 @@ const update = async (opt: CLIUpdateOption) => {
   );
   proj.sources = filteredPackages.map((item) => ({
     kind: "file",
-    url: new URL(item.filename, item.repository.url).toString(),
+    url: joinURL(item.repository.url, item.filename),
     digest: item.hash.sha256,
   }));
   await saveYAML(LINGLONG_YAML, proj, IProject);

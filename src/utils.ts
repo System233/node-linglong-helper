@@ -182,3 +182,6 @@ export const loadAuthConf = async (file: string, noWarn?: boolean) => {
     throw error;
   }
 };
+
+export const joinURL = (base: string, path: string) =>
+  `${base}${base.endsWith("/") || path.startsWith("/") ? "" : "/"}${path}`;
