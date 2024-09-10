@@ -28,6 +28,7 @@ export const walk = <T>(
   return [cb(pkg), ...walk(pkg.dependencies, cb, set)];
 };
 
-export const flat = (pkg: IPackage): IPackage[] => walk(pkg, (x) => x);
+export const flat = (pkg: IPackage | IPackage[]): IPackage[] =>
+  walk(pkg, (x) => x);
 export const getAllDepends = (pkg: IPackage | IPackage[]) =>
   walk(pkg, (pkg) => `${pkg.package}`);

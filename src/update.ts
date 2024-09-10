@@ -53,22 +53,21 @@ const update = async (opt: CLIUpdateOption) => {
   const manager = new PackageManager({ cacheDir: opt.cacheDir });
   const sourceList = await loadSourcesList();
   const entries = sourceList.concat(opt.entry);
-  const authConf = await loadAuthConf(
-    opt.authConf || AUTH_CONF,
-    !!opt.authConf
-  );
+  const authConf = await loadAuthConf(opt.authConf || AUTH_CONF, !opt.authConf);
   entries.forEach((item) => manager.repository.create(parseSourceEnrty(item)));
   authConf.forEach((item) => manager.auth.conf.push(item));
   await manager.load();
   const currentDeps = opt.depends.concat(await loadPackages(DEP_LIST));
-  const packages = currentDeps.flatMap((item) => {
-    const pkg = manager.resolve(item, { recursive: true });
-    if (pkg == null) {
-      console.warn(`找不到依赖: ${JSON.stringify(item)}`);
-      return [];
-    }
-    return flat(pkg);
-  });
+  const packages = flat(
+    currentDeps.flatMap((item) => {
+      const pkg = manager.resolve(item, { recursive: true });
+      if (pkg == null) {
+        console.warn(`找不到依赖: ${JSON.stringify(item)}`);
+        return [];
+      }
+      return [pkg];
+    })
+  );
   const proj = await loadYAML<IProject>(LINGLONG_YAML);
   const baseListFile =
     opt.baseListFile || (await resolveOrAsset(LINGLONG_BASE_PACKAGE_LIST));
