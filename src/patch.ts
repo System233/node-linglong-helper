@@ -13,6 +13,7 @@ const allPatches = {
   qt: "QT环境补丁",
   mono: "MONO环境补丁",
   icon: "图标补丁",
+  qpa: "QT QPA环境补丁",
 };
 export const patch = async (patches: string[]) => {
   const list = await Promise.all(
