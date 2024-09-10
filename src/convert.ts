@@ -95,9 +95,14 @@ const convert = async (rawId: string, opt: CLIConvertOption) => {
 export const convertCommand = new Command("convert")
   .description("创建DEB包转换项目")
   .argument("<id>", "DEB包名")
-  .option("-d,--depend <depends...>", "依赖列表", (x, y) => y.concat(x), [])
+  .option("-d,--depends <depends...>", "依赖列表", (x, y) => y.concat(x), [])
   .option("-e,--entry <entry...>", "APT源条目", (x, y) => y.concat(x), [])
-  .option("-f,--entry-list <...entryList>", "APT源条目文件")
+  .option(
+    "-f,--entry-list <entryList...>",
+    "APT源条目文件",
+    (x, y) => y.concat(x),
+    []
+  )
   .option("--cacheDir <cacheDir>", "APT缓存目录")
   .option(
     "--runtime-list <runtimeList>",

@@ -21,6 +21,7 @@ import {
   LINGLONG_BASE_PACKAGE_LIST,
   LINGLONG_RUNTIME_PACKAGE_LIST,
   LINGLONG_YAML,
+  SOURCES_LIST,
 } from "./constant.js";
 import { Command } from "commander";
 import { PackageManager, parseSourceEnrty } from "apt-cli";
@@ -46,9 +47,8 @@ export interface CLIUpdateOption {
 const update = async (opt: CLIUpdateOption) => {
   const manager = new PackageManager({ cacheDir: opt.cacheDir });
   const sourceList = await loadSourcesList();
-  sourceList
-    .concat(opt.entry)
-    .forEach((item) => manager.repository.create(parseSourceEnrty(item)));
+  const entries = sourceList.concat(opt.entry);
+  entries.forEach((item) => manager.repository.create(parseSourceEnrty(item)));
   await manager.load();
   const currentDeps = opt.depends.concat(await loadPackages(DEP_LIST));
   const packages = currentDeps.flatMap((item) => {
@@ -87,6 +87,7 @@ const update = async (opt: CLIUpdateOption) => {
   }));
   await saveYAML(LINGLONG_YAML, proj, IProject);
   await Promise.all([
+    opt.entry.length ? savePackages(SOURCES_LIST, entries) : null,
     savePackages(
       DEP_LIST_GENERATED,
       Array.from(filteredPackages, (x) => `${x.package}`)
@@ -100,8 +101,13 @@ const update = async (opt: CLIUpdateOption) => {
 
 export const updateCommand = new Command("update")
   .description("更新玲珑项目依赖")
-  .option("-d,--depend <depends...>", "追加依赖列表", (x, y) => y.concat(x), [])
-  .option("-e,--entry <entry...>", "APT源条目", (x, y) => y.concat(x), [])
+  .option(
+    "-d,--depends <depends...>",
+    "追加依赖列表",
+    (x, y) => y.concat(x),
+    []
+  )
+  .option("-e,--entry <entry...>", "追加APT源条目", (x, y) => y.concat(x), [])
   .option("--cacheDir <cacheDir>", "APT缓存目录", ".cache")
   .option("--with-runtime", "引入默认org.deepin.Runtime")
   .option("--base-list <baseList>", "基础环境包列表文件")

@@ -91,7 +91,7 @@ export const create = async (rawId: string, opt: CLICreateOption) => {
         install(BUILD_SCRIPT, id),
       ]);
       console.log(
-        `已创建项目:${id}, 可通过以下命令进行初始化:\n\tcd ${id};\n\t${BIN_NAME} update`
+        `已创建项目:${id}, 可通过以下命令进行初始化:\n cd ${id};\n ${BIN_NAME} update`
       );
     },
     opt.nolock
@@ -101,9 +101,14 @@ export const create = async (rawId: string, opt: CLICreateOption) => {
 export const command = new Command("create")
   .description("创建玲珑包工程")
   .argument("<id>", "包名")
-  .option("-d,--depend <depends...>", "依赖列表", (x, y) => y.concat(x), [])
+  .option("-d,--depends <depends...>", "依赖列表", (x, y) => y.concat(x), [])
   .option("-e,--entry <entry...>", "APT源条目", (x, y) => y.concat(x), [])
-  .option("-f,--entry-list <...entryList>", "APT源条目文件")
+  .option(
+    "-f,--entry-list <entryList...>",
+    "APT源条目文件",
+    (x, y) => y.concat(x),
+    []
+  )
   .option("--with-runtime", "引入默认org.deepin.Runtime")
   .option("--boot <boot>", "启动文件路径", LINGLONG_BOOT_DEFAULT)
   .option("--name <name>", "应用名称", "App Name")
