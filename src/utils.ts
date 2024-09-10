@@ -105,24 +105,10 @@ export const resolveAsset = (name: string) =>
 
 export const joinRoot = (file: string, root?: string) =>
   root ? join(root, file) : file;
+
 export const savePackages = async (listFile: string, packages: string[]) => {
   await writeFile(listFile, packages.join("\n"));
 };
-export const loadRuntimePackages = () =>
-  loadPackages(resolveAsset(LINGLONG_RUNTIME_PACKAGE_LIST));
-export const loadBasePackages = () =>
-  loadPackages(join(resolveAsset(LINGLONG_BASE_PACKAGE_LIST)));
-
-export const loadDepList = (root?: string) =>
-  loadPackages(joinRoot(DEP_LIST, root));
-
-export const loadExcludeDepList = (root?: string, noWarn?: boolean) =>
-  loadPackages(joinRoot(DEP_EXCLUDE_LIST, root), noWarn);
-export const saveExcludeDepList = (deps: string[], root?: string) =>
-  savePackages(joinRoot(DEP_EXCLUDE_LIST, root), deps);
-
-export const saveDepList = (deps: string[], root?: string) =>
-  savePackages(joinRoot(DEP_LIST, root), deps);
 
 export const loadSourcesList = async (root?: string) => {
   const data = await loadPackages(joinRoot(SOURCES_LIST, root));

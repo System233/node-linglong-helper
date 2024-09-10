@@ -11,16 +11,19 @@
 import {
   getLinyapsName,
   loadPackages,
-  loadRuntimePackages,
   lockPorjectDir,
   normalizeVersion,
+  resolveAsset,
 } from "./utils.js";
 import { join } from "path";
 import { Command } from "commander";
 import { PackageManager, parseSourceEnrty } from "apt-cli";
 import { create } from "./create.js";
 import { getAllDepends } from "./apt.js";
-import { LINGLONG_BOOT_DEFAULT } from "./constant.js";
+import {
+  LINGLONG_BOOT_DEFAULT,
+  LINGLONG_RUNTIME_PACKAGE_LIST,
+} from "./constant.js";
 
 export interface CLIConvertOption {
   id: string;
@@ -36,6 +39,7 @@ export interface CLIConvertOption {
   kind: "app" | "runtime";
   description: string;
   boot: string;
+  runtimeList: string;
 }
 const convert = async (rawId: string, opt: CLIConvertOption) => {
   opt.id = rawId;
@@ -64,7 +68,9 @@ const convert = async (rawId: string, opt: CLIConvertOption) => {
     const allDepends = Array.from(
       new Set(opt.depends.concat(getAllDepends(pkg)))
     );
-    const runtimePackages = await loadRuntimePackages();
+    const runtimePackages = await loadPackages(
+      opt.runtimeList || resolveAsset(LINGLONG_RUNTIME_PACKAGE_LIST)
+    );
     const neededRuntime = !!allDepends.find((item) =>
       runtimePackages.includes(item)
     );
@@ -93,6 +99,10 @@ export const convertCommand = new Command("convert")
   .option("-e,--entry <entry...>", "APT源条目", (x, y) => y.concat(x), [])
   .option("-f,--entry-list <...entryList>", "APT源条目文件")
   .option("--cacheDir <cacheDir>", "APT缓存目录")
+  .option(
+    "--runtime-list <runtimeList>",
+    "Runtime环境包列表文件,用于自动判断是否需要引入runtime"
+  )
   .option("--with-runtime", "引入默认org.deepin.Runtime")
   .option("--boot <boot>", "启动文件路径", LINGLONG_BOOT_DEFAULT)
   .option("--name <name>", "应用名称")

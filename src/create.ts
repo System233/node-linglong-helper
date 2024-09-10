@@ -6,9 +6,9 @@
 import {
   getLinyapsName,
   install,
+  joinRoot,
   loadPackages,
   lockPorjectDir,
-  saveDepList,
   savePackages,
   saveYAML,
   validateYAML,
@@ -18,6 +18,7 @@ import { IProject } from "./interface.js";
 import {
   BIN_NAME,
   BUILD_SCRIPT,
+  DEP_LIST,
   INSTALL_DEP_SCRIPT,
   INSTALL_START_SCRIPT,
   LINGLONG_BASE_DEFAULT,
@@ -54,7 +55,6 @@ export const create = async (rawId: string, opt: CLICreateOption) => {
         opt.entryList.map((item) => loadPackages(item))
       );
       const entries = opt.entry.concat(listEntries.flat());
-      await savePackages(SOURCES_LIST, entries);
 
       const yamlFile = join(id, LINGLONG_YAML);
       const cmd = `/opt/apps/${id}/files/${opt.boot || LINGLONG_BOOT_DEFAULT}`;
@@ -83,8 +83,9 @@ export const create = async (rawId: string, opt: CLICreateOption) => {
         ].join("\n"),
       });
       await saveYAML<IProject>(yamlFile, proj);
-      await saveDepList(opt.depends, id);
       await Promise.all([
+        savePackages(joinRoot(SOURCES_LIST, id), entries),
+        savePackages(joinRoot(DEP_LIST, id), opt.depends),
         install(INSTALL_DEP_SCRIPT, id),
         install(INSTALL_START_SCRIPT, id),
         install(BUILD_SCRIPT, id),
