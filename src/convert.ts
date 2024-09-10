@@ -8,9 +8,9 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
 
-import { writeFile } from "fs/promises";
 import {
   getLinyapsName,
+  loadPackages,
   loadRuntimePackages,
   lockPorjectDir,
   normalizeVersion,
@@ -20,21 +20,22 @@ import { Command } from "commander";
 import { PackageManager, parseSourceEnrty } from "apt-cli";
 import { create } from "./create.js";
 import { getAllDepends } from "./apt.js";
-import { SOURCES_LIST } from "./constant.js";
+import { LINGLONG_BOOT_DEFAULT } from "./constant.js";
 
 export interface CLIConvertOption {
   id: string;
   name: string;
-  depend: string[];
+  depends: string[];
   entry: string[];
+  entryList: string[];
   withRuntime: boolean;
   runtime: string;
   base: string;
-
   cacheDir: string;
   version: string;
   kind: "app" | "runtime";
   description: string;
+  boot: string;
 }
 const convert = async (rawId: string, opt: CLIConvertOption) => {
   opt.id = rawId;
@@ -42,22 +43,26 @@ const convert = async (rawId: string, opt: CLIConvertOption) => {
   const id = getLinyapsName(pkgId);
 
   await lockPorjectDir(id, async () => {
-    const sourcesFile = join(id, SOURCES_LIST);
-    await writeFile(sourcesFile, opt.entry.join("\n"));
+    const listEntries = await Promise.all(
+      opt.entryList.map((item) => loadPackages(item))
+    );
+    const entries = opt.entry.concat(listEntries.flat());
 
     const manager = new PackageManager({
       cacheDir: opt.cacheDir || join(id, ".cache"),
     });
-    opt.entry.forEach((item) =>
+    entries.forEach((item) =>
       manager.repository.create(parseSourceEnrty(item))
     );
+
     await manager.load();
+
     const pkg = manager.resolve(opt.id, { recursive: true });
     if (!pkg) {
       throw new Error(`找不到包: ${JSON.stringify(opt.id)}`);
     }
     const allDepends = Array.from(
-      new Set(opt.depend.concat(getAllDepends(pkg)))
+      new Set(opt.depends.concat(getAllDepends(pkg)))
     );
     const runtimePackages = await loadRuntimePackages();
     const neededRuntime = !!allDepends.find((item) =>
@@ -65,7 +70,7 @@ const convert = async (rawId: string, opt: CLIConvertOption) => {
     );
     await create(pkgId, {
       id: pkgId,
-      depend: [opt.id, ...opt.depend],
+      depends: [opt.id, ...opt.depends],
       name: opt.name || pkg.package,
       version: opt.version || normalizeVersion(pkg.version),
       kind: opt.kind || "app",
@@ -74,6 +79,9 @@ const convert = async (rawId: string, opt: CLIConvertOption) => {
       base: opt.base,
       runtime: opt.runtime,
       nolock: true,
+      entry: entries,
+      entryList: [],
+      boot: opt.boot,
     });
   });
 };
@@ -83,8 +91,10 @@ export const convertCommand = new Command("convert")
   .argument("<id>", "DEB包名")
   .option("-d,--depend <depends...>", "依赖列表", (x, y) => y.concat(x), [])
   .option("-e,--entry <entry...>", "APT源条目", (x, y) => y.concat(x), [])
+  .option("-f,--entry-list <...entryList>", "APT源条目文件")
   .option("--cacheDir <cacheDir>", "APT缓存目录")
   .option("--with-runtime", "引入默认org.deepin.Runtime")
+  .option("--boot <boot>", "启动文件路径", LINGLONG_BOOT_DEFAULT)
   .option("--name <name>", "应用名称")
   .option("--kind <app|runtime>", "应用类型")
   .option("--version <x.x.x.x>", "版本号")

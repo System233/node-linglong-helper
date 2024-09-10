@@ -14,7 +14,7 @@ import {
   saveYAML,
 } from "./utils.js";
 import { IProject } from "./interface.js";
-import { DEP_LIST_GENERATED, LINGLONG_YAML } from "./constant.js";
+import { DEP_LIST_ALL, DEP_LIST_GENERATED, LINGLONG_YAML } from "./constant.js";
 import { Command } from "commander";
 import { PackageManager, parseSourceEnrty } from "apt-cli";
 import { flat } from "./apt.js";
@@ -41,47 +41,44 @@ const update = async (opt: CLIUpdateOption) => {
     .forEach((item) => manager.repository.create(parseSourceEnrty(item)));
   await manager.load();
   const currentDeps = [...(await loadDepList()), ...opt.depend];
-  const packages = Array.from(
-    new Set(
-      currentDeps.flatMap((item) => {
-        const pkg = manager.resolve(item, { recursive: true });
-        if (pkg == null) {
-          console.warn(`找不到依赖: ${JSON.stringify(item)}`);
-          return [];
-        }
-        return flat(pkg);
-      })
-    )
-  );
+  const packages = currentDeps.flatMap((item) => {
+    const pkg = manager.resolve(item, { recursive: true });
+    if (pkg == null) {
+      console.warn(`找不到依赖: ${JSON.stringify(item)}`);
+      return [];
+    }
+    return flat(pkg);
+  });
 
   const proj = await loadYAML<IProject>(LINGLONG_YAML);
 
   const [basePackages, runtimePackages, excludePackages] = await Promise.all([
     loadBasePackages(),
     proj.runtime ? loadRuntimePackages() : [],
-    loadExcludeDepList(null,true),
+    loadExcludeDepList(".", true),
   ]);
   const envPackages = new Set(
     [].concat(basePackages, runtimePackages, excludePackages)
   );
-  const uniquePackage = new Set();
-  const filteredPackages = packages.filter((item) => {
-    if (envPackages.has(item.package) || uniquePackage.has(item.package)) {
-      return false;
-    }
-    uniquePackage.add(item.package);
-    return true;
-  });
+  const filteredPackages = packages.filter(
+    (item) => !envPackages.has(item.package)
+  );
   proj.sources = filteredPackages.map((item) => ({
     kind: "file",
     url: new URL(item.filename, item.repository.url).toString(),
     digest: item.hash.sha256,
   }));
   await saveYAML(LINGLONG_YAML, proj, IProject);
-  await savePackages(
-    DEP_LIST_GENERATED,
-    Array.from(filteredPackages, (x) => `${x.package}`)
-  );
+  await Promise.all([
+    savePackages(
+      DEP_LIST_GENERATED,
+      Array.from(filteredPackages, (x) => `${x.package}`)
+    ),
+    savePackages(
+      DEP_LIST_ALL,
+      Array.from(packages, (x) => `${x.package}`)
+    ),
+  ]);
 };
 
 export const updateCommand = new Command("update")

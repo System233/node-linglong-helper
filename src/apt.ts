@@ -12,7 +12,7 @@ export const resolve = (depends: string[]) =>
 export const walk = <T>(
   pkg: IPackage | IPackage[],
   cb: (pkg: IPackage) => T,
-  set: Set<IPackage> = new Set()
+  set: Set<string> = new Set()
 ): T[] => {
   if (!pkg) {
     return [];
@@ -20,10 +20,11 @@ export const walk = <T>(
   if (Array.isArray(pkg)) {
     return pkg.flatMap((item) => walk(item, cb, set));
   }
-  if (set.has(pkg)) {
+  const id = `${pkg.package}:${pkg.architecture}:${pkg.version}`;
+  if (set.has(id)) {
     return [];
   }
-  set.add(pkg);
+  set.add(id);
   return [cb(pkg), ...walk(pkg.dependencies, cb, set)];
 };
 

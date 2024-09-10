@@ -6,8 +6,10 @@
 import {
   getLinyapsName,
   install,
+  loadPackages,
   lockPorjectDir,
   saveDepList,
+  savePackages,
   saveYAML,
   validateYAML,
 } from "./utils.js";
@@ -19,9 +21,11 @@ import {
   INSTALL_DEP_SCRIPT,
   INSTALL_START_SCRIPT,
   LINGLONG_BASE_DEFAULT,
+  LINGLONG_BOOT_DEFAULT,
   LINGLONG_RUNTIME_DEFAULT,
   LINGLONG_YAML,
   LINGLONG_YAML_VERSION,
+  SOURCES_LIST,
 } from "./constant.js";
 import { Command } from "commander";
 
@@ -29,13 +33,16 @@ export interface CLICreateOption {
   id: string;
   name: string;
   version: string;
-  depend: string[];
+  depends: string[];
+  entry: string[];
+  entryList: string[];
   kind: "app" | "runtime";
   withRuntime: boolean;
   description: string;
   base: string;
   runtime: string;
   nolock: boolean;
+  boot: string;
 }
 export const create = async (rawId: string, opt: CLICreateOption) => {
   opt.id = rawId;
@@ -43,8 +50,14 @@ export const create = async (rawId: string, opt: CLICreateOption) => {
   await lockPorjectDir(
     id,
     async () => {
+      const listEntries = await Promise.all(
+        opt.entryList.map((item) => loadPackages(item))
+      );
+      const entries = opt.entry.concat(listEntries.flat());
+      await savePackages(SOURCES_LIST, entries);
+
       const yamlFile = join(id, LINGLONG_YAML);
-      const cmd = `/opt/apps/${id}/files/bin/start.sh`;
+      const cmd = `/opt/apps/${id}/files/${opt.boot || LINGLONG_BOOT_DEFAULT}`;
       const proj: IProject = await validateYAML({
         version: LINGLONG_YAML_VERSION,
         package: {
@@ -70,7 +83,7 @@ export const create = async (rawId: string, opt: CLICreateOption) => {
         ].join("\n"),
       });
       await saveYAML<IProject>(yamlFile, proj);
-      await saveDepList(opt.depend, id);
+      await saveDepList(opt.depends, id);
       await Promise.all([
         install(INSTALL_DEP_SCRIPT, id),
         install(INSTALL_START_SCRIPT, id),
@@ -88,7 +101,10 @@ export const command = new Command("create")
   .description("创建玲珑包工程")
   .argument("<id>", "包名")
   .option("-d,--depend <depends...>", "依赖列表", (x, y) => y.concat(x), [])
+  .option("-e,--entry <entry...>", "APT源条目", (x, y) => y.concat(x), [])
+  .option("-f,--entry-list <...entryList>", "APT源条目文件")
   .option("--with-runtime", "引入默认org.deepin.Runtime")
+  .option("--boot <boot>", "启动文件路径", LINGLONG_BOOT_DEFAULT)
   .option("--name <name>", "应用名称", "App Name")
   .option("--kind <app|runtime>", "应用类型", "app")
   .option("--version <x.x.x.x>", "版本号", "0.0.0.1")

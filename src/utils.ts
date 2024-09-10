@@ -92,7 +92,7 @@ export const loadPackages = async (listFile: string, noWarn?: boolean) => {
     return data
       .split("\n")
       .map((x) => x.trim())
-      .filter((x) => x.length);
+      .filter((x) => x.length && !x.startsWith("#"));
   } catch (err) {
     if (!noWarn) {
       console.warn(`无法加载: ${JSON.stringify(listFile)}`);
