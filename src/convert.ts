@@ -39,7 +39,8 @@ export interface CLIConvertOption {
   kind: "app" | "runtime";
   description: string;
   boot: string;
-  runtimeList: string;
+  baseListFile?: string;
+  runtimeListFile?: string;
 }
 const convert = async (rawId: string, opt: CLIConvertOption) => {
   opt.id = rawId;
@@ -69,7 +70,7 @@ const convert = async (rawId: string, opt: CLIConvertOption) => {
       new Set(opt.depends.concat(getAllDepends(pkg)))
     );
     const runtimePackages = await loadPackages(
-      opt.runtimeList || resolveAsset(LINGLONG_RUNTIME_PACKAGE_LIST)
+      opt.runtimeListFile || resolveAsset(LINGLONG_RUNTIME_PACKAGE_LIST)
     );
     const neededRuntime = !!allDepends.find((item) =>
       runtimePackages.includes(item)
@@ -105,8 +106,12 @@ export const convertCommand = new Command("convert")
   )
   .option("--cacheDir <cacheDir>", "APT缓存目录")
   .option(
-    "--runtime-list <runtimeList>",
-    "Runtime环境包列表文件,用于自动判断是否需要引入runtime"
+    "--base-list-file <baseListFile>",
+    "Base环境包列表文件,用于筛选需下载的依赖"
+  )
+  .option(
+    "--runtime-list-file <runtimeListFile>",
+    "Runtime环境包列表文件,用于用于筛选需下载的依赖"
   )
   .option("--with-runtime", "引入默认org.deepin.Runtime")
   .option("--boot <boot>", "启动文件路径", LINGLONG_BOOT_DEFAULT)

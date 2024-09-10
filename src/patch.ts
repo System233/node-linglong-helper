@@ -4,7 +4,7 @@
 // https://opensource.org/licenses/MIT
 
 import { Command } from "commander";
-import { install, installPatches } from "./utils.js";
+import { installAsset, installPatches } from "./utils.js";
 
 const allPatches = {
   ld: "LD_LIBRARY_PATH 补丁",
@@ -22,7 +22,7 @@ export const patch = async (patches: string[]) => {
         return null;
       }
       const patch = `./patch_${name}.sh`;
-      const ok = await install(patch);
+      const ok = await installAsset(patch);
       if (ok) {
         console.log("已添加补丁", name);
       } else {

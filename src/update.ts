@@ -7,7 +7,7 @@ import {
   loadPackages,
   loadSourcesList,
   loadYAML,
-  resolveAsset,
+  resolveOrAsset,
   savePackages,
   saveYAML,
 } from "./utils.js";
@@ -41,8 +41,8 @@ export interface CLIUpdateOption {
   kind: "app" | "runtime";
   description: string;
 
-  baseList: string;
-  runtimeList: string;
+  baseListFile?: string;
+  runtimeListFile?: string;
 }
 const update = async (opt: CLIUpdateOption) => {
   const manager = new PackageManager({ cacheDir: opt.cacheDir });
@@ -61,15 +61,15 @@ const update = async (opt: CLIUpdateOption) => {
   });
 
   const proj = await loadYAML<IProject>(LINGLONG_YAML);
-
+  const baseListFile =
+    opt.baseListFile || (await resolveOrAsset(LINGLONG_BASE_PACKAGE_LIST));
+  const runtimeListFile =
+    opt.runtimeListFile ||
+    (await resolveOrAsset(LINGLONG_RUNTIME_PACKAGE_LIST));
   const [basePackages, runtimePackages, excludePackages, includePackages] =
     await Promise.all([
-      loadPackages(opt.baseList || resolveAsset(LINGLONG_BASE_PACKAGE_LIST)),
-      proj.runtime
-        ? loadPackages(
-            opt.runtimeList || resolveAsset(LINGLONG_RUNTIME_PACKAGE_LIST)
-          )
-        : [],
+      loadPackages(baseListFile),
+      proj.runtime ? loadPackages(runtimeListFile) : [],
       loadPackages(DEP_EXCLUDE_LIST, true),
       loadPackages(DEP_INCLDUE_LIST, true),
     ]);
@@ -100,7 +100,7 @@ const update = async (opt: CLIUpdateOption) => {
 };
 
 export const updateCommand = new Command("update")
-  .description("更新玲珑项目依赖")
+  .description("更新玲珑项目")
   .option(
     "-d,--depends <depends...>",
     "追加依赖列表",
@@ -110,8 +110,14 @@ export const updateCommand = new Command("update")
   .option("-e,--entry <entry...>", "追加APT源条目", (x, y) => y.concat(x), [])
   .option("--cacheDir <cacheDir>", "APT缓存目录", ".cache")
   .option("--with-runtime", "引入默认org.deepin.Runtime")
-  .option("--base-list <baseList>", "基础环境包列表文件")
-  .option("--runtime-list <runtimeList>", "Runtime环境包列表文件")
+  .option(
+    "--base-list-file <baseListFile>",
+    "Base环境包列表文件,用于筛选需下载的依赖"
+  )
+  .option(
+    "--runtime-list-file <runtimeListFile>",
+    "Runtime环境包列表文件,用于用于筛选需下载的依赖"
+  )
   .option("--name <name>", "应用名称")
   .option("--kind <app|runtime>", "应用类型")
   .option("--version <x.x.x.x>", "版本号")

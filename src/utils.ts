@@ -17,16 +17,8 @@ import yaml from "yaml";
 import { IProject } from "./interface.js";
 import { plainToInstance } from "class-transformer";
 import { validate, ValidationError } from "class-validator";
-import {
-  DEP_LIST,
-  DEP_EXCLUDE_LIST,
-  LINGLONG_BASE_PACKAGE_LIST,
-  LINGLONG_RUNTIME_PACKAGE_LIST,
-  SOURCES_LIST,
-  INSTALL_PATCH_SCRIPT,
-  SHEBANG,
-} from "./constant.js";
-import { join } from "path";
+import { SOURCES_LIST, INSTALL_PATCH_SCRIPT, SHEBANG } from "./constant.js";
+import { basename, join } from "path";
 import { fileURLToPath } from "node:url";
 
 export const getLinyapsName = (x: string) =>
@@ -100,6 +92,12 @@ export const loadPackages = async (listFile: string, noWarn?: boolean) => {
     return [];
   }
 };
+export const resolveOrAsset = async (name: string) => {
+  if (await exists(name)) {
+    return name;
+  }
+  return resolveAsset(name);
+};
 export const resolveAsset = (name: string) =>
   join(fileURLToPath(import.meta.resolve(".")), "../assets", name);
 
@@ -148,8 +146,8 @@ export const exists = async (path: string) => {
     return false;
   }
 };
-export const install = async (name: string, root?: string) => {
-  const path = resolveAsset(name);
+export const installFile = async (path: string, root?: string) => {
+  const name = basename(path);
   const dest = joinRoot(name, root);
   if (await exists(dest)) {
     return false;
@@ -157,6 +155,10 @@ export const install = async (name: string, root?: string) => {
   await copyFile(path, dest, constants.COPYFILE_EXCL);
   await chmod(dest, "755");
   return true;
+};
+export const installAsset = async (name: string, root?: string) => {
+  const path = resolveAsset(name);
+  return installFile(path, root);
 };
 
 export const installPatches = async (patches: string[], root?: string) => {

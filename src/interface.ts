@@ -67,11 +67,11 @@ export class IProject {
   command: string[];
 
   @IsString()
-  @IsMatchRegExp(/^\S+\/\d+\.\d+\.\d+$/)
+  @IsMatchRegExp(/^(\w+:)?\S+\/\d+\.\d+\.\d+(\.\d+)?(\/\w+)?$/)
   base: string;
 
   @IsString()
-  @IsMatchRegExp(/^\S+\/\d+\.\d+\.\d+$/)
+  @IsMatchRegExp(/^(\w+:)?\S+\/\d+\.\d+\.\d+(\.\d+)?(\/\w+)?$/)
   @IsOptional()
   runtime?: string;
 

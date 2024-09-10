@@ -14,12 +14,12 @@ export const SOURCES_LIST = "sources.list";
 export const LINGLONG_YAML = "linglong.yaml";
 export const LINGLONG_YAML_VERSION = "1.0";
 
-export const LINGLONG_BASE_DEFAULT = "org.deepin.foundation/23.0.0";
+export const LINGLONG_BASE_DEFAULT = "org.deepin.foundation/23.0.1";
 export const LINGLONG_RUNTIME_DEFAULT = "org.deepin.Runtime/23.0.1";
 export const LINGLONG_BOOT_DEFAULT = "bin/start.sh";
 
-export const LINGLONG_RUNTIME_PACKAGE_LIST = "x86_64.runtime.packages.list";
-export const LINGLONG_BASE_PACKAGE_LIST = "x86_64.base.packages.list";
+export const LINGLONG_RUNTIME_PACKAGE_LIST = "runtime.packages.list";
+export const LINGLONG_BASE_PACKAGE_LIST = "base.packages.list";
 export const BUILD_SCRIPT = "build.sh";
 export const INSTALL_PATCH_SCRIPT = "install_patch.sh";
 export const INSTALL_DEP_SCRIPT = "install_dep.sh";

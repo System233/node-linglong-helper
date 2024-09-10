@@ -5,10 +5,12 @@
 
 import {
   getLinyapsName,
-  install,
+  installAsset,
+  installFile,
   joinRoot,
   loadPackages,
   lockPorjectDir,
+  resolveAsset,
   savePackages,
   saveYAML,
   validateYAML,
@@ -22,6 +24,7 @@ import {
   INSTALL_DEP_SCRIPT,
   INSTALL_START_SCRIPT,
   LINGLONG_BASE_DEFAULT,
+  LINGLONG_BASE_PACKAGE_LIST,
   LINGLONG_BOOT_DEFAULT,
   LINGLONG_RUNTIME_DEFAULT,
   LINGLONG_YAML,
@@ -44,6 +47,8 @@ export interface CLICreateOption {
   runtime: string;
   nolock: boolean;
   boot: string;
+  baseListFile?: string;
+  runtimeListFile?: string;
 }
 export const create = async (rawId: string, opt: CLICreateOption) => {
   opt.id = rawId;
@@ -82,13 +87,21 @@ export const create = async (rawId: string, opt: CLICreateOption) => {
           `exec /project/${BUILD_SCRIPT}`,
         ].join("\n"),
       });
+      const baseListFile =
+        opt.baseListFile || resolveAsset(LINGLONG_BASE_PACKAGE_LIST);
+      const runtimeListFile =
+        opt.runtimeListFile || resolveAsset(LINGLONG_RUNTIME_DEFAULT);
       await saveYAML<IProject>(yamlFile, proj);
       await Promise.all([
         savePackages(joinRoot(SOURCES_LIST, id), entries),
         savePackages(joinRoot(DEP_LIST, id), opt.depends),
-        install(INSTALL_DEP_SCRIPT, id),
-        install(INSTALL_START_SCRIPT, id),
-        install(BUILD_SCRIPT, id),
+        installAsset(INSTALL_DEP_SCRIPT, id),
+        installAsset(INSTALL_START_SCRIPT, id),
+        installAsset(BUILD_SCRIPT, id),
+        installFile(baseListFile, id),
+        opt.runtime || opt.withRuntime || opt.runtimeListFile
+          ? installFile(runtimeListFile, id)
+          : null,
       ]);
       console.log(
         `已创建项目:${id}, 可通过以下命令进行初始化:\n cd ${id};\n ${BIN_NAME} update`
@@ -117,4 +130,12 @@ export const command = new Command("create")
   .option("--description <description>", "应用说明", "Description")
   .option("--base <package/version>", "基础依赖包")
   .option("--runtime <package/version>", "Runtime依赖包")
+  .option(
+    "--base-list-file <baseListFile>",
+    "Base环境包列表文件,用于筛选需下载的依赖"
+  )
+  .option(
+    "--runtime-list-file <runtimeListFile>",
+    "Runtime环境包列表文件,用于用于筛选需下载的依赖"
+  )
   .action(create);
