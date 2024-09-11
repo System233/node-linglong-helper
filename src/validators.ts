@@ -7,7 +7,6 @@ import { plainToInstance } from "class-transformer";
 import {
   ValidationOptions,
   registerDecorator,
-  validate,
   validateOrReject,
 } from "class-validator";
 

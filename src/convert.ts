@@ -51,8 +51,6 @@ export interface CLIConvertOption {
   from?: string;
 }
 const convert = async (rawId: string, opt: CLIConvertOption) => {
-
-  console.log(opt)
   opt.id = rawId;
   const [pkgId] = opt.id.split(":", 1);
   const id = getLinyapsName(pkgId, opt.withLinyaps);
