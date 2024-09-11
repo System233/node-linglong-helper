@@ -33,6 +33,7 @@ export interface CLIConvertOption {
   entry: string[];
   entryList: string[];
   withRuntime: boolean;
+  withLinyaps: boolean;
   runtime?: string;
   base?: string;
   cacheDir?: string;
@@ -43,11 +44,14 @@ export interface CLIConvertOption {
   baseListFile?: string;
   runtimeListFile?: string;
   authConf: string[];
+  includeListFile: string[];
+  excludeListFile: string[];
+  fromDir?: string;
 }
 const convert = async (rawId: string, opt: CLIConvertOption) => {
   opt.id = rawId;
   const [pkgId] = opt.id.split(":", 1);
-  const id = getLinyapsName(pkgId);
+  const id = getLinyapsName(pkgId, opt.withLinyaps);
 
   await lockPorjectDir(id, async () => {
     const listEntries = await Promise.all(
@@ -97,6 +101,10 @@ const convert = async (rawId: string, opt: CLIConvertOption) => {
       entryList: [],
       boot: opt.boot,
       authConf: opt.authConf,
+      includeListFile: opt.includeListFile,
+      excludeListFile: opt.excludeListFile,
+      fromDir: opt.fromDir,
+      withLinyaps: opt.withLinyaps,
     });
   });
 };
@@ -127,7 +135,20 @@ export const convertCommand = new Command("convert")
     "--runtime-list-file <runtimeListFile>",
     "Runtime环境包列表文件,用于用于筛选需下载的依赖"
   )
+  .option(
+    "--include-list-file <includeListFile...>",
+    "强包含依赖列表文件",
+    (x, y) => y.concat(x),
+    []
+  )
+  .option(
+    "--exclude-list-file <excludeListFile...>",
+    "排除依赖列表文件",
+    (x, y) => y.concat(x),
+    []
+  )
   .option("--with-runtime", "引入默认org.deepin.Runtime")
+  .option("--with-linyaps", "包名添加.linyaps后缀")
   .option("--boot <boot>", "启动文件路径", LINGLONG_BOOT_DEFAULT)
   .option("--name <name>", "应用名称")
   .option("--kind <app|runtime>", "应用类型")
@@ -135,4 +156,5 @@ export const convertCommand = new Command("convert")
   .option("--description <description>", "应用说明")
   .option("--base <id/version>", "基础依赖包")
   .option("--runtime <id/version>", "Runtime依赖包")
+  .option("--from <fromDir>", "以指定项目为模板进行创建")
   .action(convert);

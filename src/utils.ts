@@ -14,7 +14,7 @@ import {
   writeFile,
 } from "fs/promises";
 import yaml from "yaml";
-import { APTAuthConf, IProject } from "./interface.js";
+import { IProject } from "./interface.js";
 import { plainToInstance } from "class-transformer";
 import { validate, ValidationError } from "class-validator";
 import { SOURCES_LIST, INSTALL_PATCH_SCRIPT, SHEBANG } from "./constant.js";
@@ -22,8 +22,8 @@ import { basename, join } from "path";
 import { fileURLToPath } from "node:url";
 import { loadAPTAuthConf } from "apt-cli";
 
-export const getLinyapsName = (x: string) =>
-  x.endsWith(".linyaps") ? x : `${x}.linyaps`;
+export const getLinyapsName = (x: string, withLinyaps: boolean) =>
+  !withLinyaps ? x : x.endsWith(".linyaps") ? x : `${x}.linyaps`;
 
 export const loadYAML = async <T>(file: string) => {
   const buffer = await readFile(file, "utf8");
@@ -79,7 +79,16 @@ export const normalizeVersion = (version: string) => {
   return segments.map((x) => parseInt(x)).join(".");
 };
 
-export const loadPackages = async (listFile: string, noWarn?: boolean) => {
+export const loadPackages = async (
+  listFile: string | string[],
+  noWarn?: boolean
+): Promise<string[]> => {
+  if (Array.isArray(listFile)) {
+    const result = await Promise.all(
+      listFile.map((item) => loadPackages(item, noWarn))
+    );
+    return result.flat();
+  }
   try {
     const data = await readFile(listFile, "utf8");
     return data

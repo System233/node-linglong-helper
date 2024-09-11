@@ -22,6 +22,7 @@ import {
   DEP_LIST_ALL,
   DEP_LIST_GENERATED,
   LINGLONG_BASE_PACKAGE_LIST,
+  LINGLONG_RUNTIME_DEFAULT,
   LINGLONG_RUNTIME_PACKAGE_LIST,
   LINGLONG_YAML,
   SOURCES_LIST,
@@ -93,6 +94,17 @@ const update = async (opt: CLIUpdateOption) => {
     url: joinURL(item.repository.url, item.filename),
     digest: item.hash.sha256,
   }));
+
+  proj.base = opt.base ?? proj.base;
+  proj.runtime =
+    opt.runtime ??
+    proj.runtime ??
+    (opt.withRuntime ? LINGLONG_RUNTIME_DEFAULT : undefined);
+  proj.package.name = opt.name ?? proj.package.name;
+  proj.package.kind = opt.kind ?? proj.package.kind;
+  proj.package.version = opt.version ?? proj.package.version;
+  proj.package.description = opt.kind ?? proj.package.description;
+
   await saveYAML(LINGLONG_YAML, proj, IProject);
   await Promise.all([
     opt.entry.length ? savePackages(SOURCES_LIST, entries) : null,

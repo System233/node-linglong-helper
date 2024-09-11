@@ -4,11 +4,13 @@
 // https://opensource.org/licenses/MIT
 
 import {
+  exists,
   getLinyapsName,
   installAsset,
   installFile,
   joinRoot,
   loadPackages,
+  loadYAML,
   lockPorjectDir,
   resolveAsset,
   savePackages,
@@ -21,6 +23,8 @@ import {
   AUTH_CONF,
   BIN_NAME,
   BUILD_SCRIPT,
+  DEP_EXCLUDE_LIST,
+  DEP_INCLDUE_LIST,
   DEP_LIST,
   INSTALL_DEP_SCRIPT,
   INSTALL_START_SCRIPT,
@@ -43,6 +47,7 @@ export interface CLICreateOption {
   entryList: string[];
   kind?: "app" | "runtime";
   withRuntime: boolean;
+  withLinyaps: boolean;
   description?: string;
   base?: string;
   runtime?: string;
@@ -51,23 +56,61 @@ export interface CLICreateOption {
   baseListFile?: string;
   runtimeListFile?: string;
   authConf: string[];
+  fromDir?: string;
+  includeListFile: string[];
+  excludeListFile: string[];
 }
 export const create = async (rawId: string, opt: CLICreateOption) => {
   opt.id = rawId;
-  const id = getLinyapsName(opt.id);
+  const id = getLinyapsName(opt.id, opt.withLinyaps);
   await lockPorjectDir(
     id,
     async () => {
-      const listEntries = await Promise.all(
-        opt.entryList.map((item) => loadPackages(item))
-      );
+      if (opt.fromDir) {
+        if (!(await exists(opt.fromDir))) {
+          console.warn(
+            `警告: 模板项目不存在, formDir=${JSON.stringify(opt.fromDir)}`
+          );
+        }
+        const form = await loadYAML<IProject>(
+          joinRoot(LINGLONG_YAML, opt.fromDir)
+        );
+        opt.name = opt.name ?? form.package?.name;
+        opt.version = opt.version ?? form.package?.version;
+        opt.kind = opt.kind ?? form.package?.kind;
+        opt.base = opt.base ?? form.base;
+        opt.runtime = opt.runtime ?? form.runtime;
+        opt.description = opt.description ?? form.package.description;
+        const dependsList = joinRoot(DEP_LIST, opt.fromDir);
+        const authConf = joinRoot(AUTH_CONF, opt.fromDir);
+        const sourcesList = joinRoot(SOURCES_LIST, opt.fromDir);
+        const includeList = joinRoot(DEP_INCLDUE_LIST, opt.fromDir);
+        const excludeList = joinRoot(DEP_EXCLUDE_LIST, opt.fromDir);
+        await Promise.all(
+          [
+            [authConf, () => opt.authConf.push(authConf)] as const,
+            [sourcesList, () => opt.entryList.push(sourcesList)] as const,
+            [includeList, () => opt.includeListFile.push(includeList)] as const,
+            [excludeList, () => opt.excludeListFile.push(excludeList)] as const,
+          ].map(async ([file, resolve]) => {
+            if (await exists(file)) {
+              resolve();
+            }
+          })
+        );
+        const depends = await loadPackages(dependsList, true);
+        depends.forEach((item) => opt.depends.push(item));
+      }
+      const listEntries = await loadPackages(opt.entryList);
       const entries = opt.entry.concat(listEntries.flat());
 
-      const authConf = (
-        await Promise.all(opt.authConf.map((item) => loadPackages(item)))
-      ).flat();
+      const authConf = await loadPackages(opt.authConf);
+      const includeList = await loadPackages(opt.includeListFile);
+      const excludeList = await loadPackages(opt.excludeListFile);
+
       const yamlFile = join(id, LINGLONG_YAML);
       const cmd = `/opt/apps/${id}/files/${opt.boot || LINGLONG_BOOT_DEFAULT}`;
+
       const proj: IProject = await validateYAML({
         version: LINGLONG_YAML_VERSION,
         package: {
@@ -105,12 +148,15 @@ export const create = async (rawId: string, opt: CLICreateOption) => {
         installAsset(INSTALL_START_SCRIPT, id),
         installAsset(BUILD_SCRIPT, id),
         installFile(baseListFile, id),
-        opt.runtime || opt.withRuntime || opt.runtimeListFile
-          ? installFile(runtimeListFile, id)
-          : null,
+        (opt.runtime || opt.withRuntime || opt.runtimeListFile) &&
+          installFile(runtimeListFile, id),
+        includeList.length &&
+          savePackages(joinRoot(DEP_INCLDUE_LIST, id), includeList),
+        excludeList.length &&
+          savePackages(joinRoot(DEP_EXCLUDE_LIST, id), excludeList),
       ]);
       console.log(
-        `已创建项目:${id}, 可通过以下命令进行初始化:\n cd ${id};\n ${BIN_NAME} update`
+        `已创建项目 ${id}, 可通过以下命令进行初始化:\n cd ${id}\n ${BIN_NAME} update`
       );
     },
     opt.nolock
@@ -134,7 +180,20 @@ export const command = new Command("create")
     (x, y) => y.concat(x),
     []
   )
+  .option(
+    "--include-list-file <includeListFile...>",
+    "强包含依赖列表文件",
+    (x, y) => y.concat(x),
+    []
+  )
+  .option(
+    "--exclude-list-file <excludeListFile...>",
+    "排除依赖列表文件",
+    (x, y) => y.concat(x),
+    []
+  )
   .option("--with-runtime", "引入默认org.deepin.Runtime")
+  .option("--with-linyaps", "包名添加.linyaps后缀")
   .option("--boot <boot>", "启动文件路径", LINGLONG_BOOT_DEFAULT)
   .option("--name <name>", "应用名称", "App Name")
   .option("--kind <app|runtime>", "应用类型", "app")
@@ -150,4 +209,5 @@ export const command = new Command("create")
     "--runtime-list-file <runtimeListFile>",
     "Runtime环境包列表文件,用于用于筛选需下载的依赖"
   )
+  .option("--from <fromDir>", "以指定项目为模板进行创建")
   .action(create);

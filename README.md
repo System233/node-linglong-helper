@@ -12,16 +12,16 @@
 ## 功能&路线图
 
 - [x] 创建玲珑项目
-- [x] 生成玲珑 DEB 转换项目
+  - [x] 生成玲珑 DEB 转换项目
+  - [x] 通过模板创建项目
+  - [x] 可选 .linyaps 包名后缀
 - [x] 依赖管理
   - [x] 筛选并更新 linglong.yaml 依赖项
   - [x] 指定查找依赖的 APT 源
   - [x] APT [auth.conf](https://manpages.debian.org/testing/apt/apt_auth.conf.5.en.html) 支持
-  - [x] 指定 base 依赖
-  - [x] 指定 runime 依赖
+  - [x] 指定 base/runime 依赖
+  - [x] 指定 base/runtime 依赖包列表
   - [x] 自动检测是否需要引入 runime 依赖
-  - [x] 指定 base 依赖包列表
-  - [x] 指定 runtime 依赖包列表
   - [ ] 自动化测试缺失依赖
   - [ ] 文件名=>包名查找器
 - [x] 模块化补丁
