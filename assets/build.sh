@@ -4,7 +4,7 @@ function run() {
     [ -e "$1" ] && $1
 }
 
-mkdir -p $(dirname $LINGLONG_COMMAND)
+mkdir -p "$(dirname $LINGLONG_COMMAND)"
 echo '#!/bin/bash' >$LINGLONG_COMMAND
 
 run "./install_dep.sh"
