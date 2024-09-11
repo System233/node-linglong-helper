@@ -56,7 +56,7 @@ export interface CLICreateOption {
   baseListFile?: string;
   runtimeListFile?: string;
   authConf: string[];
-  fromDir?: string;
+  from?: string;
   includeListFile: string[];
   excludeListFile: string[];
 }
@@ -66,18 +66,18 @@ export const create = async (rawId: string, opt: CLICreateOption) => {
   await lockPorjectDir(
     id,
     async () => {
-      if (opt.fromDir) {
-        if (!(await exists(opt.fromDir))) {
+      if (opt.from) {
+        if (!(await exists(opt.from))) {
           console.warn(
-            `警告: 模板项目不存在, formDir=${JSON.stringify(opt.fromDir)}`
+            `警告: 模板项目不存在, formDir=${JSON.stringify(opt.from)}`
           );
         }
-        const yamlPath = joinRoot(LINGLONG_YAML, opt.fromDir);
-        const dependsList = joinRoot(DEP_LIST, opt.fromDir);
-        const authConf = joinRoot(AUTH_CONF, opt.fromDir);
-        const sourcesList = joinRoot(SOURCES_LIST, opt.fromDir);
-        const includeList = joinRoot(DEP_INCLDUE_LIST, opt.fromDir);
-        const excludeList = joinRoot(DEP_EXCLUDE_LIST, opt.fromDir);
+        const yamlPath = joinRoot(LINGLONG_YAML, opt.from);
+        const dependsList = joinRoot(DEP_LIST, opt.from);
+        const authConf = joinRoot(AUTH_CONF, opt.from);
+        const sourcesList = joinRoot(SOURCES_LIST, opt.from);
+        const includeList = joinRoot(DEP_INCLDUE_LIST, opt.from);
+        const excludeList = joinRoot(DEP_EXCLUDE_LIST, opt.from);
         const tasks = [
           [authConf, () => opt.authConf.push(authConf)],
           [sourcesList, () => opt.entryList.push(sourcesList)],
@@ -87,7 +87,7 @@ export const create = async (rawId: string, opt: CLICreateOption) => {
             yamlPath,
             async () => {
               const form = await loadYAML<IProject>(
-                joinRoot(LINGLONG_YAML, opt.fromDir)
+                joinRoot(LINGLONG_YAML, opt.from)
               );
               opt.name = opt.name ?? form.package?.name;
               opt.version = opt.version ?? form.package?.version;
@@ -221,5 +221,5 @@ export const command = new Command("create")
     "--runtime-list-file <runtimeListFile>",
     "Runtime环境包列表文件,用于用于筛选需下载的依赖"
   )
-  .option("--from <fromDir>", "以指定项目为模板进行创建")
+  .option("--from <PROJECT>", "以指定项目为模板进行创建")
   .action(create);

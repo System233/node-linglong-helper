@@ -48,17 +48,19 @@ export interface CLIConvertOption {
   authConf: string[];
   includeListFile: string[];
   excludeListFile: string[];
-  fromDir?: string;
+  from?: string;
 }
 const convert = async (rawId: string, opt: CLIConvertOption) => {
+
+  console.log(opt)
   opt.id = rawId;
   const [pkgId] = opt.id.split(":", 1);
   const id = getLinyapsName(pkgId, opt.withLinyaps);
 
   await lockPorjectDir(id, async () => {
     const listEntries = await loadPackages(opt.entryList);
-    const fromEntries = opt.fromDir
-      ? await loadPackages(joinRoot(SOURCES_LIST, opt.fromDir))
+    const fromEntries = opt.from
+      ? await loadPackages(joinRoot(SOURCES_LIST, opt.from))
       : [];
     const entries = opt.entry.concat(listEntries, fromEntries);
 
@@ -104,7 +106,7 @@ const convert = async (rawId: string, opt: CLIConvertOption) => {
       authConf: opt.authConf,
       includeListFile: opt.includeListFile,
       excludeListFile: opt.excludeListFile,
-      fromDir: opt.fromDir,
+      from: opt.from,
       withLinyaps: opt.withLinyaps,
     });
   });
@@ -157,5 +159,5 @@ export const convertCommand = new Command("convert")
   .option("--description <description>", "应用说明")
   .option("--base <id/version>", "基础依赖包")
   .option("--runtime <id/version>", "Runtime依赖包")
-  .option("--from <fromDir>", "以指定项目为模板进行创建")
+  .option("--from <PROJECT>", "以指定项目为模板进行创建")
   .action(convert);
