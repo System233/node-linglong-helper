@@ -10,6 +10,7 @@
 
 import {
   getLinyapsName,
+  joinRoot,
   loadAuthConf,
   loadPackages,
   lockPorjectDir,
@@ -24,6 +25,7 @@ import { getAllDepends } from "./apt.js";
 import {
   LINGLONG_BOOT_DEFAULT,
   LINGLONG_RUNTIME_PACKAGE_LIST,
+  SOURCES_LIST,
 } from "./constant.js";
 
 export interface CLIConvertOption {
@@ -54,10 +56,11 @@ const convert = async (rawId: string, opt: CLIConvertOption) => {
   const id = getLinyapsName(pkgId, opt.withLinyaps);
 
   await lockPorjectDir(id, async () => {
-    const listEntries = await Promise.all(
-      opt.entryList.map((item) => loadPackages(item))
-    );
-    const entries = opt.entry.concat(listEntries.flat());
+    const listEntries = await loadPackages(opt.entryList);
+    const fromEntries = opt.fromDir
+      ? await loadPackages(joinRoot(SOURCES_LIST, opt.fromDir))
+      : [];
+    const entries = opt.entry.concat(listEntries, fromEntries);
 
     const manager = new PackageManager({
       cacheDir: opt.cacheDir || join(id, ".cache"),
@@ -66,9 +69,7 @@ const convert = async (rawId: string, opt: CLIConvertOption) => {
       manager.repository.create(parseSourceEnrty(item))
     );
 
-    const authConf = (
-      await Promise.all(opt.authConf.map((item) => loadAuthConf(item)))
-    ).flat();
+    const authConf = await loadAuthConf(opt.authConf);
     authConf.forEach((item) => manager.auth.conf.push(item));
 
     await manager.load();

@@ -20,7 +20,7 @@ import { validate, ValidationError } from "class-validator";
 import { SOURCES_LIST, INSTALL_PATCH_SCRIPT, SHEBANG } from "./constant.js";
 import { basename, join } from "path";
 import { fileURLToPath } from "node:url";
-import { loadAPTAuthConf } from "apt-cli";
+import { APTAuthConf, loadAPTAuthConf } from "apt-cli";
 
 export const getLinyapsName = (x: string, withLinyaps: boolean) =>
   !withLinyaps ? x : x.endsWith(".linyaps") ? x : `${x}.linyaps`;
@@ -181,7 +181,16 @@ export const installPatches = async (patches: string[], root?: string) => {
   await chmod(dest, "755");
 };
 
-export const loadAuthConf = async (file: string, noWarn?: boolean) => {
+export const loadAuthConf = async (
+  file: string | string[],
+  noWarn?: boolean
+): Promise<APTAuthConf[]> => {
+  if (Array.isArray(file)) {
+    const result = await Promise.all(
+      file.map((item) => loadAuthConf(item, noWarn))
+    );
+    return result.flat();
+  }
   try {
     return await loadAPTAuthConf(file, noWarn);
   } catch (error) {

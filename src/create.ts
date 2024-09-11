@@ -72,34 +72,46 @@ export const create = async (rawId: string, opt: CLICreateOption) => {
             `警告: 模板项目不存在, formDir=${JSON.stringify(opt.fromDir)}`
           );
         }
-        const form = await loadYAML<IProject>(
-          joinRoot(LINGLONG_YAML, opt.fromDir)
-        );
-        opt.name = opt.name ?? form.package?.name;
-        opt.version = opt.version ?? form.package?.version;
-        opt.kind = opt.kind ?? form.package?.kind;
-        opt.base = opt.base ?? form.base;
-        opt.runtime = opt.runtime ?? form.runtime;
-        opt.description = opt.description ?? form.package.description;
+        const yamlPath = joinRoot(LINGLONG_YAML, opt.fromDir);
         const dependsList = joinRoot(DEP_LIST, opt.fromDir);
         const authConf = joinRoot(AUTH_CONF, opt.fromDir);
         const sourcesList = joinRoot(SOURCES_LIST, opt.fromDir);
         const includeList = joinRoot(DEP_INCLDUE_LIST, opt.fromDir);
         const excludeList = joinRoot(DEP_EXCLUDE_LIST, opt.fromDir);
-        await Promise.all(
+        const tasks = [
+          [authConf, () => opt.authConf.push(authConf)],
+          [sourcesList, () => opt.entryList.push(sourcesList)],
+          [includeList, () => opt.includeListFile.push(includeList)],
+          [excludeList, () => opt.excludeListFile.push(excludeList)],
           [
-            [authConf, () => opt.authConf.push(authConf)] as const,
-            [sourcesList, () => opt.entryList.push(sourcesList)] as const,
-            [includeList, () => opt.includeListFile.push(includeList)] as const,
-            [excludeList, () => opt.excludeListFile.push(excludeList)] as const,
-          ].map(async ([file, resolve]) => {
+            yamlPath,
+            async () => {
+              const form = await loadYAML<IProject>(
+                joinRoot(LINGLONG_YAML, opt.fromDir)
+              );
+              opt.name = opt.name ?? form.package?.name;
+              opt.version = opt.version ?? form.package?.version;
+              opt.description = opt.description ?? form.package?.description;
+              opt.kind = opt.kind ?? form.package?.kind;
+              opt.base = opt.base ?? form.base;
+              opt.runtime = opt.runtime ?? form.runtime;
+            },
+          ],
+          [
+            dependsList,
+            async () => {
+              const depends = await loadPackages(dependsList, true);
+              depends.forEach((item) => opt.depends.push(item));
+            },
+          ],
+        ] as Array<[string, () => Promise<void> | void]>;
+        await Promise.all(
+          tasks.map(async ([file, resolve]) => {
             if (await exists(file)) {
-              resolve();
+              await resolve();
             }
           })
         );
-        const depends = await loadPackages(dependsList, true);
-        depends.forEach((item) => opt.depends.push(item));
       }
       const listEntries = await loadPackages(opt.entryList);
       const entries = opt.entry.concat(listEntries.flat());
