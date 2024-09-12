@@ -36,6 +36,7 @@
   - [x] qpa
 - [ ] 本地 DEB 输入
 - [ ] 预下载 DEB（解决 ll-builder 不支持 auth.conf 的问题）
+- [ ] 分离补丁仓库
 
 ## 安装&使用
 
