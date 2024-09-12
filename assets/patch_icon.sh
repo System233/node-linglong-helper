@@ -98,8 +98,7 @@ function setup_image() {
     fi
     mkdir -p "$ICON_DIR"
     # 复制以防止程序硬编码读取原位置图片
-    copy -af "$IMAGE" "$ICON_PATH"
-    echo "Copy $IMAGE => $ICON_PATH"
+    cp -afv "$IMAGE" "$ICON_PATH"
 
 }
 function replace_image() {
@@ -127,14 +126,15 @@ function replace_image() {
     setup_image "$1" "${SIZE}x${SIZE}" "${ICON_NAME}.png"
 }
 PATCH_APP_PATH="s#/opt/apps/\S+/files#${PREFIX}#g"
+PATCH_USR_PATH="s#/usr#${PREFIX}#g"
 while read LINE; do
     ICON=$(grep -oP "(?:Icon=)\K.*" "$LINE" | head -n1)
     NAME=$(basename "$LINE")
 
-    ICON_NAME="${LINGLONG_APP_ID}_${NAME}"
+    ICON_NAME="${LINGLONG_APP_ID}_${NAME%.*}"
 
     if [[ $ICON == /* ]]; then
-        REBASE_ICON=$(echo $ICON | sed -E -e "$PATCH_APP_PATH")
+        REBASE_ICON=$(echo $ICON | sed -E -e "$PATCH_APP_PATH" -e "$PATCH_USR_PATH")
         if [ -e "$REBASE_ICON" ]; then
             replace_image "$REBASE_ICON" "$ICON_NAME"
             sed -i -E -e "/Icon=/ s#$ICON#$ICON_NAME#g" $LINE
@@ -147,8 +147,7 @@ while read LINE; do
             DIR=$(dirname "$IMAGE")
             EXTENSION=png #$(echo "${IMAGE##*.}" | tr '[:upper:]' '[:lower:]')
             TO="$DIR/$ICON_NAME.${EXTENSION}"
-            echo "Move $IMAGE => $TO"
-            mv "$IMAGE" "$TO"
+            mv -v "$IMAGE" "$TO"
         done <<<$(find $PREFIX/share/icons/ -name "${ICON}.*")
     fi
 done <<<$(find $PREFIX/share/applications/ -name "*.desktop")
