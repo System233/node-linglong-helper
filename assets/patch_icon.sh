@@ -3,7 +3,6 @@
 # set -x
 
 echo Applying Patch: icon
-
 function ico_width() {
     od -j6 -An -N1 -tu1 --endian=little "$1" | xargs
 }
@@ -20,12 +19,14 @@ function jpeg_sof0_offset() {
     grep $(printf "%b" "\xFF\xC0") -aob "$1" | head -n1 | grep -oP "^\d+"
 }
 function jpeg_width() {
-    offset=$(jpeg_sof0_offset "$1")
-    od -An -j165 -N2 -tu2 --endian=big "$1" | xargs
+    OFFSET=$(jpeg_sof0_offset "$1")
+    OFFSET=$((OFFSET + 7))
+    od -An -j${OFFSET} -N2 -tu2 --endian=big "$1" | xargs
 }
 function jpeg_height() {
-    offset=$(jpeg_sof0_offset "$1")
-    od -An -j163 -N2 -tu2 --endian=big "$1" | xargs
+    OFFSET=$(jpeg_sof0_offset "$1")
+    OFFSET=$((OFFSET + 5))
+    od -An -j${OFFSET} -N2 -tu2 --endian=big "$1" | xargs
 }
 function gif_width() {
     od -An -j6 -N2 -tu2 --endian=little "$1" | xargs
@@ -50,9 +51,9 @@ function unknown_height() {
     unknown_image "$1"
 }
 function image_format() {
-    file=$1
-    extension=$(echo "${file##*.}" | tr '[:upper:]' '[:lower:]')
-    case "$extension" in
+    FILE=$1
+    EXTENSION=$(echo "${FILE##*.}" | tr '[:upper:]' '[:lower:]')
+    case "$EXTENSION" in
     jpg | jpeg)
         echo "jpeg"
         ;;
@@ -77,66 +78,84 @@ function image_format() {
     esac
 }
 function image_width() {
-    format=$(image_format "$1")
-    ${format}_width "$1"
+    FORMAT=$(image_format "$1")
+    ${FORMAT}_width "$1"
 }
 
 function image_height() {
-    format=$(image_format "$1")
-    ${format}_height "$1"
+    FORMAT=$(image_format "$1")
+    ${FORMAT}_height "$1"
 }
 function setup_image() {
-    image=$1
-    size=$2
-    name=$(basename $image)
-    icon_dir=$PREFIX/share/icons/hicolor/${size}/apps
-    icon_path="$icon_dir/$name"
-    mkdir -p "$icon_dir"
-    cp -af "$image" "$icon_path"
-    echo "Copy $image => $icon_path"
+    IMAGE=$1
+    SIZE=$2
+    NAME=$3
+    ICON_DIR=$PREFIX/share/icons/hicolor/${SIZE}/apps
+    ICON_PATH="$ICON_DIR/$NAME"
+    if [ -e "$$ICON_PATH" ] || [ ! -e "$IMAGE" ]; then
+        echo "Skip $IMAGE => $ICON_PATH"
+        return
+    fi
+    mkdir -p "$ICON_DIR"
+    # 复制以防止程序硬编码读取原位置图片
+    copy -af "$IMAGE" "$ICON_PATH"
+    echo "Copy $IMAGE => $ICON_PATH"
 
 }
 function replace_image() {
-    format=$(image_format "$1")
-    if [ "$format" == "svg" ]; then
-        setup_image $1 scalable
+    # DDE只搜索.svg和.png
+    ICON_NAME=$2
+    FORMAT=$(image_format "$1")
+    if [ "$FORMAT" == "svg" ]; then
+        setup_image "$1" scalable "${ICON_NAME}.svg"
         return
     fi
-    width=$(image_width "$1")
-    if [[ $((width & (width - 1))) -eq 0 ]]; then
-        setup_image "$1" "${width}x${width}"
+    WIDTH=$(image_width "$1")
+    if [[ $((WIDTH & (WIDTH - 1))) -eq 0 ]]; then
+        setup_image "$1" "${WIDTH}x${WIDTH}" "${ICON_NAME}.png"
         return
     fi
-    size=16
-    for i in {4..10}; do
-        current=$((2 ** i))
-        if [[ "$current" -le "$width" ]]; then
-            size=$current
+    SIZE=16
+    for i in 16 24 32 48 128 256 512; do
+        CURRENT=$((2 ** i))
+        if [[ "$CURRENT" -le "$WIDTH" ]]; then
+            SIZE=$CURRENT
         else
             break
         fi
     done
-    setup_image "$1" "${size}x${size}"
+    setup_image "$1" "${SIZE}x${SIZE}" "${ICON_NAME}.png"
 }
 PATCH_APP_PATH="s#/opt/apps/\S+/files#${PREFIX}#g"
-while read line; do
-    ICON=$(grep -oP "(?:Icon=)\K.*" "$line" | head -n1)
-    ICON_NAME=${ICON%.*}
+while read LINE; do
+    ICON=$(grep -oP "(?:Icon=)\K.*" "$LINE" | head -n1)
+    NAME=$(basename "$LINE")
+
+    ICON_NAME="${LINGLONG_APP_ID}_${NAME}"
+
     if [[ $ICON == /* ]]; then
         REBASE_ICON=$(echo $ICON | sed -E -e "$PATCH_APP_PATH")
         if [ -e "$REBASE_ICON" ]; then
-            replace_image "$REBASE_ICON"
-            ICON_NAME=$(basename "$ICON_NAME")
-            sed -i -E -e "/Icon=/ s#$ICON#$ICON_NAME#g" $line
-            echo "Replace Icon ${ICON} => ${ICON_NAME}"
+            replace_image "$REBASE_ICON" "$ICON_NAME"
+            sed -i -E -e "/Icon=/ s#$ICON#$ICON_NAME#g" $LINE
         else
             echo "Warning: Rebased path for ${ICON} not found: ${REBASE_ICON}"
         fi
     else
-        format=$(image_format "$ICON")
-        if [ "$format" != "unknown" ]; then
-            sed -i -E -e "/Icon=/ s#$ICON#$ICON_NAME#g" $line
-            echo "Replace Icon ${ICON} => ${ICON_NAME}"
-        fi
+        sed -i -E -e "/Icon=/ s#$ICON#$ICON_NAME#g" $LINE
+        while read IMAGE; do
+            DIR=$(dirname "$IMAGE")
+            EXTENSION=png #$(echo "${IMAGE##*.}" | tr '[:upper:]' '[:lower:]')
+            TO="$DIR/$ICON_NAME.${EXTENSION}"
+            echo "Move $IMAGE => $TO"
+            mv "$IMAGE" "$TO"
+        done <<<$(find $PREFIX/share/icons/ -name "${ICON}.*")
     fi
 done <<<$(find $PREFIX/share/applications/ -name "*.desktop")
+
+# IMAGE=$(ls /opt/apps/com.todesk.linyaps/files/share/icons/hicolor/*/apps/* 2>/dev/null| head -n 1 | xargs -r basename -a)
+# ICON="${IMAGE%.*}"
+# if [ -n "$ICON" ];then
+#     echo Patch Desktop Icon Path
+#     sed -i -E $PREFIX/share/applications/*.desktop -e "/Icon=/ s+^Icon=.*$+Icon=${ICON}+g"
+# fi
