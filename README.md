@@ -24,6 +24,9 @@
   - [x] 自动检测是否需要引入 runime 依赖
   - [ ] 自动化测试缺失依赖
   - [ ] 文件名=>包名查找器
+- [x] 图标处理
+  - [x] 图标裁剪服务
+  - [x] 图标裁剪命令
 - [x] 模块化补丁
   - [x] glib
   - [x] LD_LIBRARAY_PATH
@@ -47,11 +50,13 @@ Options:
   -h, --help              display help for command
 
 Commands:
-  create [options] <id>   创建玲珑包工程
-  convert [options] <id>  创建DEB包转换项目
-  update [options]        更新玲珑项目
-  patch <name...>         添加应用补丁
-  help [command]          display help for command
+  create [options] <id>    创建玲珑包工程
+  convert [options] <id>   创建DEB包转换项目
+  update [options]         更新玲珑项目
+  patch <name...>          添加应用补丁
+  serve [options]          启动图标裁剪服务
+  sharp [options] <input>  裁剪图片
+  help [command]           display help for command
 ```
 
 ## 示例

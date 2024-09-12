@@ -9,9 +9,13 @@ import { command as createCommand } from "./create.js";
 import { convertCommand } from "./convert.js";
 import { updateCommand } from "./update.js";
 import { patchCommand } from "./patch.js";
+import { serveCommand } from "./serve.js";
+import { sharpCommand } from "./sharp.js";
 program
   .addCommand(createCommand)
   .addCommand(convertCommand)
   .addCommand(updateCommand)
   .addCommand(patchCommand)
+  .addCommand(serveCommand)
+  .addCommand(sharpCommand)
   .parse();
