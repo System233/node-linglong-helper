@@ -76,6 +76,7 @@ ll-builder run                  # 测试运行
 | sources.list          | 否,自动生成 | APT 源定义列表                                                                   |
 | base.packages.list    | 否,自动生成 | 基础包环境包列表                                                                 |
 | runtime.packages.list | 否,自动生成 | Runtime 包环境包列表                                                             |
+| env.sh                | 否          | 构建前环境变量配置                                                               |
 | build.sh              | 是          | 构建脚本入口                                                                     |
 | install_dep.sh        | 是          | 依赖安装脚本                                                                     |
 | install_patch.sh      | 否          | 补丁安装脚本                                                                     |
