@@ -22,14 +22,14 @@
   - [x] 指定 base/runime 依赖
   - [x] 指定 base/runtime 依赖包列表
   - [x] 自动检测是否需要引入 runime 依赖
-  - [ ] 自动化测试缺失依赖
-  - [ ] 文件名=>包名查找器
+  - [x] 自动化测试缺失依赖 (v0.2.0)
+  - [x] 文件名=>包名查找器 (v0.2.0)
 - [x] 图标处理
   - [x] 图标裁剪服务
   - [x] 图标裁剪命令
 - [x] 模块化补丁
   - [x] glib
-  - [x] LD_LIBRARAY_PATH
+  - [x] ld (LD_LIBRARAY_PATH)
   - [x] icon
   - [x] java
   - [x] qt
@@ -57,6 +57,7 @@ Commands:
   patch <name...>          添加应用补丁
   serve [options]          启动图标裁剪服务
   sharp [options] <input>  裁剪图片
+  resolve [options]        自动化解决隐式依赖
   help [command]           display help for command
 ```
 

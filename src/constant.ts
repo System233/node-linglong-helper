@@ -10,6 +10,7 @@ export const DEP_INCLDUE_LIST = "deps.include.list";
 export const DEP_LIST_GENERATED = "deps.generated.list";
 export const DEP_LIST_ALL = "deps.all.list";
 
+export const DETECT_DEP_SCRIPT = "detect_dep.sh";
 export const SOURCES_LIST = "sources.list";
 export const AUTH_CONF = "auth.conf";
 export const LINGLONG_YAML = "linglong.yaml";
@@ -26,5 +27,7 @@ export const INSTALL_PATCH_SCRIPT = "install_patch.sh";
 export const INSTALL_DEP_SCRIPT = "install_dep.sh";
 export const INSTALL_START_SCRIPT = "install_start.sh";
 export const DOT_GITIGNORE = ".gitignore";
+
+export const LL_BUILDER_COMMAND = process.env.LL_BUILDER_COMMAND??'ll-builder';
 
 export const SHEBANG='#!/bin/bash'

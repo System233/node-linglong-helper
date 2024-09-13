@@ -11,6 +11,7 @@ import { updateCommand } from "./update.js";
 import { patchCommand } from "./patch.js";
 import { serveCommand } from "./serve.js";
 import { sharpCommand } from "./sharp.js";
+import { resolveCommand } from "./resolve.js";
 program
   .addCommand(createCommand)
   .addCommand(convertCommand)
@@ -18,4 +19,5 @@ program
   .addCommand(patchCommand)
   .addCommand(serveCommand)
   .addCommand(sharpCommand)
+  .addCommand(resolveCommand)
   .parse();
