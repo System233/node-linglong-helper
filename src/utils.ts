@@ -14,7 +14,7 @@ import {
   writeFile,
 } from "fs/promises";
 import yaml from "yaml";
-import { IProject } from "./interface.js";
+import { InstallOption, IProject } from "./interface.js";
 import { plainToInstance } from "class-transformer";
 import { validate, ValidationError } from "class-validator";
 import { SOURCES_LIST, INSTALL_PATCH_SCRIPT, SHEBANG } from "./constant.js";
@@ -156,19 +156,21 @@ export const exists = async (path: string) => {
     return false;
   }
 };
-export const installFile = async (path: string, root?: string) => {
+export const installFile = async (path: string, option?: InstallOption) => {
   const name = basename(path);
-  const dest = joinRoot(name, root);
+  const dest = joinRoot(option.rename ?? name, option.root);
   if (await exists(dest)) {
     return false;
   }
   await copyFile(path, dest, constants.COPYFILE_EXCL);
-  await chmod(dest, "755");
+  if (option.mode) {
+    await chmod(dest, option.mode);
+  }
   return true;
 };
-export const installAsset = async (name: string, root?: string) => {
+export const installAsset = async (name: string, option?: InstallOption) => {
   const path = resolveAsset(name);
-  return installFile(path, root);
+  return installFile(path, option);
 };
 
 export const installPatches = async (patches: string[], root?: string) => {

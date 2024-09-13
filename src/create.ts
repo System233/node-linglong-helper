@@ -27,6 +27,7 @@ import {
   DEP_INCLDUE_LIST,
   DEP_LIST,
   DOT_GITIGNORE,
+  DOT_GITIGNORE_RENAME,
   INSTALL_DEP_SCRIPT,
   INSTALL_START_SCRIPT,
   LINGLONG_BASE_DEFAULT,
@@ -157,13 +158,17 @@ export const create = async (rawId: string, opt: CLICreateOption) => {
         savePackages(joinRoot(SOURCES_LIST, id), entries),
         savePackages(joinRoot(DEP_LIST, id), opt.depends),
         savePackages(joinRoot(AUTH_CONF, id), authConf),
-        installAsset(DOT_GITIGNORE, id),
-        installAsset(INSTALL_DEP_SCRIPT, id),
-        installAsset(INSTALL_START_SCRIPT, id),
-        installAsset(BUILD_SCRIPT, id),
-        installFile(baseListFile, id),
+        installAsset(DOT_GITIGNORE, {
+          root: id,
+          mode: "644",
+          rename: DOT_GITIGNORE_RENAME,
+        }),
+        installAsset(INSTALL_DEP_SCRIPT, { root: id, mode: "755" }),
+        installAsset(INSTALL_START_SCRIPT, { root: id, mode: "755" }),
+        installAsset(BUILD_SCRIPT, { root: id, mode: "755" }),
+        installFile(baseListFile, { root: id, mode: "644" }),
         (opt.runtime || opt.withRuntime || opt.runtimeListFile) &&
-          installFile(runtimeListFile, id),
+          installFile(runtimeListFile, { root: id, mode: "644" }),
         includeList.length &&
           savePackages(joinRoot(DEP_INCLDUE_LIST, id), includeList),
         excludeList.length &&

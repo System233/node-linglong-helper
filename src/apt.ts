@@ -3,11 +3,7 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
 
-import { PackageManager, IPackage } from "apt-cli";
-
-const pm = new PackageManager({ cacheDir: "~/.cache" });
-export const resolve = (depends: string[]) =>
-  depends.map((item) => pm.resolve(item, { recursive: true, missing: true }));
+import { IPackage } from "apt-cli";
 
 export const walk = <T>(
   pkg: IPackage | IPackage[],

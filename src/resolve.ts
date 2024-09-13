@@ -59,7 +59,7 @@ const runDetectDep = async () => {
   return set;
 };
 export const resolve = async (opt: CLIResolveOption) => {
-  await installAsset(DETECT_DEP_SCRIPT);
+  await installAsset(DETECT_DEP_SCRIPT, { mode: "755" });
   const manager = new PackageManager({ cacheDir: opt.cacheDir });
   const entries = await loadSourcesList();
   const authConf = await loadAuthConf(AUTH_CONF, true);

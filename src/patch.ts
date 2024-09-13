@@ -23,7 +23,7 @@ export const patch = async (patches: string[]) => {
         return null;
       }
       const patch = `./patch_${name}.sh`;
-      const ok = await installAsset(patch);
+      const ok = await installAsset(patch, { mode: "755" });
       if (ok) {
         console.log("已添加补丁", name);
       } else {

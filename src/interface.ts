@@ -97,3 +97,10 @@ export class IProject {
 
   [k: string]: any;
 }
+
+
+export interface InstallOption{
+  root?:string;
+  rename?:string;
+  mode?:string
+}
