@@ -84,51 +84,47 @@ export const resolve = async (opt: CLIResolveOption) => {
     }
     return false;
   };
-  let updated = false;
   for (let i = 0; i < opt.round; ++i) {
-    console.warn(`开始第`, i, `轮查找`);
+    let updated = false;
+    console.warn(`[开始第`, i, `轮查找]`);
     const files = await runDetectDep();
     if (!difference(files, missing)) {
-      console.warn("缺失依赖列表无变化,提前结束查找");
+      console.warn("缺失依赖列表无变化,结束查找");
       return;
     }
-    await Promise.all(
-      Array.from(files).map(async (file) => {
-        const packages = await manager.find(
-          `/${file}$`,
-          opt.arch.length ? opt.arch : null
-        );
-
-        packages
-          .filter((item) => regex.test(item.package))
-          .forEach((pkg) =>
-            console.warn(
-              `找到依赖 ${file} => ${pkg.package}:${pkg.index.architecture}`
-            )
-          );
-        if (!packages.length) {
-          console.warn(`未知依赖:`, file);
-          missing.add(file);
-        } else {
-          missing.delete(file);
-        }
-        packages.forEach((item) => {
-          if (!depends.includes(item.package)) {
-            console.warn("添加依赖:", item.package);
-            depends.push(item.package);
-            updated = true;
-          }
-        });
-      })
+    const list = Array.from(files);
+    const packages = await manager.find(
+      `/${list.join("|")}$`,
+      opt.arch.length ? opt.arch : null
     );
-  }
-  if (updated) {
-    console.warn("依赖列表已更新");
-    await savePackages(DEP_LIST, depends);
-  }
-  if (missing.size) {
-    console.warn(missing.size, "个依赖无法解决");
-    missing.forEach((item) => console.log(item));
+
+    packages
+      .filter((item) => regex.test(item.package))
+      .forEach((pkg) =>
+        console.warn(
+          `找到依赖 ${pkg.path} => ${pkg.package}:${pkg.index.architecture}`
+        )
+      );
+    if (!packages.length) {
+      console.warn(`全部查找失败`);
+      files.forEach((item) => missing.add(item));
+    }
+    packages.forEach((item) => {
+      if (!depends.includes(item.package)) {
+        const target = list.find((name) => item.path.includes(name));
+        console.warn("添加依赖:", item.package);
+        depends.push(item.package);
+        updated = true;
+      }
+    });
+    if (updated) {
+      console.warn("依赖列表已更新");
+      await savePackages(DEP_LIST, depends);
+    }
+    if (missing.size) {
+      console.warn(missing.size, "个依赖无法解决");
+      missing.forEach((item) => console.log(item));
+    }
   }
   await execAsync(BIN_NAME, ["update"]);
 };
