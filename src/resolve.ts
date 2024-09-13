@@ -71,11 +71,24 @@ export const resolve = async (opt: CLIResolveOption) => {
   const regex = new RegExp(opt.match, "i");
   const depends = await loadPackages(DEP_LIST, true);
   const missing = new Set<string>();
+  const difference = (x: Set<string>, y: Set<string>) => {
+    for (const i of x) {
+      if (!y.has(i)) {
+        return true;
+      }
+    }
+    for (const i of y) {
+      if (!x.has(i)) {
+        return true;
+      }
+    }
+    return false;
+  };
   let updated = false;
   for (let i = 0; i < opt.round; ++i) {
     console.warn(`开始第`, i, `轮查找`);
     const files = await runDetectDep();
-    if (!missing.difference(files).size) {
+    if (!difference(files, missing)) {
       console.warn("缺失依赖列表无变化,提前结束查找");
       return;
     }
