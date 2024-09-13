@@ -266,10 +266,10 @@ ansi-regex@^5.0.1:
   resolved "https://registry.npmmirror.com/ansi-regex/-/ansi-regex-5.0.1.tgz#082cb2c89c9fe8659a311a53bd6a4dc5301db304"
   integrity sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==
 
-apt-cli@^0.1.5:
-  version "0.1.5"
-  resolved "https://registry.npmjs.org/apt-cli/-/apt-cli-0.1.5.tgz#90f337500be4ed70a20e62b03d577f8599345108"
-  integrity sha512-pLbck3/gnKxMOJcJEaO/Z4AO6pUVQliTwQyE+U6eSay6tjSZYywRPs26KZEnd9pGq9SaepeCPW6MfIbI5y2rPA==
+apt-cli@^0.1.8:
+  version "0.1.8"
+  resolved "https://registry.npmjs.org/apt-cli/-/apt-cli-0.1.8.tgz#5c50558a8103a18a9447c35e4525ce2d567b442a"
+  integrity sha512-obHo/yyFFTbziXXbu09K+8R23elXSw++HSf0t5SG9Lm+nJEbSt8Jm39H4fPo6BhMrAdc/ewM1TTXU6DEkk9dpg==
   dependencies:
     cli-progress "^3.12.0"
     commander "^12.1.0"

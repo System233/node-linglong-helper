@@ -79,29 +79,35 @@ export const resolve = async (opt: CLIResolveOption) => {
       console.warn("缺失依赖列表无变化,提前结束查找");
       return;
     }
-    files.forEach((file) => {
-      const packages = manager
-        .find(`/${file}$`, opt.arch.length ? opt.arch : null)
-        .filter((item) => regex.test(item.package));
-      packages.forEach((pkg) =>
-        console.warn(
-          `找到依赖 ${file} => ${pkg.package}:${pkg.index.architecture}`
-        )
-      );
-      if (!packages.length) {
-        console.warn(`未知依赖:`, file);
-        missing.add(file);
-      } else {
-        missing.delete(file);
-      }
-      packages.forEach((item) => {
-        if (!depends.includes(item.package)) {
-          console.warn("添加依赖:", item.package);
-          depends.push(item.package);
-          updated = true;
+    await Promise.all(
+      Array.from(files).map(async (file) => {
+        const packages = await manager.find(
+          `/${file}$`,
+          opt.arch.length ? opt.arch : null
+        );
+
+        packages
+          .filter((item) => regex.test(item.package))
+          .forEach((pkg) =>
+            console.warn(
+              `找到依赖 ${file} => ${pkg.package}:${pkg.index.architecture}`
+            )
+          );
+        if (!packages.length) {
+          console.warn(`未知依赖:`, file);
+          missing.add(file);
+        } else {
+          missing.delete(file);
         }
-      });
-    });
+        packages.forEach((item) => {
+          if (!depends.includes(item.package)) {
+            console.warn("添加依赖:", item.package);
+            depends.push(item.package);
+            updated = true;
+          }
+        });
+      })
+    );
   }
   if (updated) {
     console.warn("依赖列表已更新");
