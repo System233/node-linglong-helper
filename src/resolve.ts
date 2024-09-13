@@ -84,7 +84,7 @@ export const resolve = async (opt: CLIResolveOption) => {
     }
     return false;
   };
-  for (let i = 0; i < opt.round; ++i) {
+  for (let i = 1; i <= opt.round; ++i) {
     let updated = false;
     console.warn(`[开始第`, i, `轮查找]`);
     const files = await runDetectDep();
@@ -93,6 +93,7 @@ export const resolve = async (opt: CLIResolveOption) => {
       return;
     }
     const list = Array.from(files);
+    console.warn("正在查找依赖:", ...list);
     const packages = await manager.find(
       `/${list.join("|")}$`,
       opt.arch.length ? opt.arch : null
