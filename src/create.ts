@@ -142,7 +142,7 @@ export const create = async (rawId: string, opt: CLICreateOption) => {
       });
       await saveYAML<IProject>(yamlFile, proj);
       await Promise.all([
-        savePackages(joinRoot(SOURCES_LIST, id), entries),
+        savePackages(joinRoot(SOURCES_LIST, id), [...new Set(entries)]),
         savePackages(joinRoot(DEP_LIST, id), opt.depends),
         installAsset(DOT_GITIGNORE, opt.from, {
           root: id,

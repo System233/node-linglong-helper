@@ -11,6 +11,7 @@ import {
   lockPorjectDir,
   normalizeVersion,
   resolveAsset,
+  uniqueFilter,
 } from "./utils.js";
 import { join } from "path";
 import { Command } from "commander";
@@ -64,6 +65,7 @@ const convert = async (rawId: string, opt: CLIConvertOption) => {
     entries
       .map((item) => parseSourceEnrty(item))
       .filter((x) => x != null)
+      .filter(uniqueFilter())
       .forEach((item) => manager.repository.create(item));
 
     const authConf = await loadAuthConf(opt.authConf);
@@ -95,8 +97,8 @@ const convert = async (rawId: string, opt: CLIConvertOption) => {
       base: opt.base,
       runtime: opt.runtime,
       nolock: true,
-      entry: entries,
-      entryList: [],
+      entry: opt.entry,
+      entryList: opt.entryList,
       boot: opt.boot,
       authConf: opt.authConf,
       includeListFile: opt.includeListFile,

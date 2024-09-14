@@ -218,3 +218,14 @@ export const loadAuthConf = async (
 
 export const joinURL = (base: string, path: string) =>
   `${base}${base.endsWith("/") || path.startsWith("/") ? "" : "/"}${path}`;
+
+export const uniqueFilter = <T>() => {
+  const set = new Set<T>();
+  return (item: T) => {
+    if (set.has(item)) {
+      return false;
+    }
+    set.add(item);
+    return true;
+  };
+};

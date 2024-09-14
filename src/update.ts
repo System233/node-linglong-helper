@@ -13,6 +13,7 @@ import {
   resolveOrAsset,
   savePackages,
   saveYAML,
+  uniqueFilter,
 } from "./utils.js";
 import { IProject } from "./interface.js";
 import {
@@ -62,6 +63,7 @@ export const update = async (opt: CLIUpdateOption) => {
   entries
     .map((item) => parseSourceEnrty(item))
     .filter((x) => x != null)
+    .filter(uniqueFilter())
     .forEach((item) => manager.repository.create(item));
 
   authConf.forEach((item) => manager.auth.conf.push(item));
