@@ -48,6 +48,7 @@ export interface CLIUpdateOption {
   baseListFile?: string;
   runtimeListFile?: string;
   authConf?: string;
+  quiet?: boolean;
 }
 
 const update = async (opt: CLIUpdateOption) => {
@@ -57,7 +58,7 @@ const update = async (opt: CLIUpdateOption) => {
   const authConf = await loadAuthConf(opt.authConf || AUTH_CONF, !opt.authConf);
   entries.forEach((item) => manager.repository.create(parseSourceEnrty(item)));
   authConf.forEach((item) => manager.auth.conf.push(item));
-  await manager.load();
+  await manager.load({ quiet: opt.quiet });
   const currentDeps = opt.depends.concat(await loadPackages(DEP_LIST));
   const packages = flat(
     currentDeps.flatMap((item) => {
@@ -145,4 +146,5 @@ export const updateCommand = new Command("update")
   .option("--description <description>", "应用说明")
   .option("--base <id/version>", "基础依赖包")
   .option("--runtime <id/version>", "Runtime依赖包")
+  .option("--quiet", "不显示进度条")
   .action(update);

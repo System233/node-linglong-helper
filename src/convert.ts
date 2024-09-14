@@ -48,6 +48,7 @@ export interface CLIConvertOption {
   authConf: string[];
   includeListFile: string[];
   excludeListFile: string[];
+  quiet?: boolean;
   from?: string;
 }
 const convert = async (rawId: string, opt: CLIConvertOption) => {
@@ -72,7 +73,7 @@ const convert = async (rawId: string, opt: CLIConvertOption) => {
     const authConf = await loadAuthConf(opt.authConf);
     authConf.forEach((item) => manager.auth.conf.push(item));
 
-    await manager.load();
+    await manager.load({ quiet: opt.quiet });
 
     const pkg = manager.resolve(opt.id, { recursive: true });
     if (!pkg) {
@@ -158,4 +159,5 @@ export const convertCommand = new Command("convert")
   .option("--base <id/version>", "基础依赖包")
   .option("--runtime <id/version>", "Runtime依赖包")
   .option("--from <PROJECT>", "以指定项目为模板进行创建")
+  .option("--quiet", "不显示进度条")
   .action(convert);

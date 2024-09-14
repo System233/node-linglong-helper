@@ -13,7 +13,7 @@ import {
   BIN_NAME,
 } from "./constant.js";
 import { createInterface } from "readline/promises";
-import { PackageManager, parseSourceEnrty } from "apt-cli";
+import { IContentItem, PackageManager, parseSourceEnrty } from "apt-cli";
 import {
   loadSourcesList,
   loadAuthConf,
@@ -70,6 +70,7 @@ export const resolve = async (opt: CLIResolveOption) => {
 
   const regex = new RegExp(opt.match, "i");
   const depends = await loadPackages(DEP_LIST, true);
+  const added = new Set<string>();
   const missing = new Set<string>();
   const difference = (x: Set<string>, y: Set<string>) => {
     for (const i of x) {
@@ -84,6 +85,7 @@ export const resolve = async (opt: CLIResolveOption) => {
     }
     return false;
   };
+  const resolved: IContentItem[] = [];
   for (let i = 1; i <= opt.round; ++i) {
     let updated = false;
     console.warn(`[开始第`, i, `轮查找]`);
@@ -92,30 +94,38 @@ export const resolve = async (opt: CLIResolveOption) => {
       console.warn("缺失依赖列表无变化,结束查找");
       return;
     }
-    const list = Array.from(files);
+    const list = Array.from(files).filter(
+      (item) => !resolved.find((pkg) => pkg.path.includes(item))
+    );
+    if (!list.length) {
+      console.warn("未发现缺失依赖,结束查找");
+      return;
+    }
     console.warn("正在查找依赖:", ...list);
     const packages = await manager.find(
       `/${list.join("|")}$`,
       opt.arch.length ? opt.arch : null
     );
 
-    packages
-      .filter((item) => regex.test(item.package))
-      .forEach((pkg) =>
-        console.warn(
-          `找到依赖 ${pkg.path} => ${pkg.package}:${pkg.index.architecture}`
-        )
-      );
-    if (!packages.length) {
+    const filtered = packages.filter((item) => regex.test(item.package));
+    filtered.forEach((pkg) =>
+      console.warn(
+        `找到依赖 ${pkg.path} => ${pkg.package}:${pkg.index.architecture}`
+      )
+    );
+    if (!filtered.length) {
       console.warn(`全部查找失败`);
       files.forEach((item) => missing.add(item));
     }
-    packages.forEach((item) => {
-      if (!depends.includes(item.package)) {
-        const target = list.find((name) => item.path.includes(name));
-        console.warn("添加依赖:", item.package);
-        depends.push(item.package);
+    const items = new Set(filtered.map((item) => item.package));
+    items.forEach((item) => {
+      if (!depends.includes(item)) {
+        console.warn("添加依赖:", item);
+        depends.push(item);
         updated = true;
+        added.add(item);
+      } else if (added.has(item)) {
+        console.error("需要但可能被排除的依赖:", item);
       }
     });
     if (updated) {
@@ -126,6 +136,8 @@ export const resolve = async (opt: CLIResolveOption) => {
       console.warn(missing.size, "个依赖无法解决");
       missing.forEach((item) => console.log(item));
     }
+
+    resolved.push(...filtered);
   }
   await execAsync(BIN_NAME, ["update"]);
 };
