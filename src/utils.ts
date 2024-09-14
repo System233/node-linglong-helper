@@ -97,7 +97,7 @@ export const loadPackages = async (
       .filter((x) => x.length && !x.startsWith("#"));
   } catch (err) {
     if (!noWarn) {
-      console.warn(`无法加载: ${JSON.stringify(listFile)}`);
+      console.warn(`无法加载: ${JSON.stringify(listFile)}`, err);
     }
     return [];
   }

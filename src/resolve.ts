@@ -30,7 +30,7 @@ export interface CLIResolveOption {
   round: number;
 }
 const execAsync = async (cmd: string, args: string[]) => {
-  const proc = spawn(cmd, args, { stdio: "inherit" });
+  const proc = spawn(cmd, args, { stdio: "inherit", cwd: process.cwd() });
   const code = await new Promise<number>((resolve, reject) => {
     proc.on("exit", resolve);
     proc.on("error", reject);

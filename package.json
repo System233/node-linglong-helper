@@ -1,14 +1,17 @@
 {
   "name": "linglong-helper",
   "type": "module",
-  "version": "0.2.11",
+  "version": "0.2.12",
   "description": "Linglong Helper CLI",
   "main": "dist/index.js",
-  "repository": "git+https://github.com/System233/node-linglong-helper",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/System233/node-linglong-helper.git"
+  },
   "author": "System233",
   "license": "MIT",
   "bin": {
-    "ll-helper": "./dist/cli.js"
+    "ll-helper": "dist/cli.js"
   },
   "scripts": {
     "build": "tsc",
