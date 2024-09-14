@@ -50,6 +50,7 @@ const runDetectDep = async (opt: CLIResolveOption) => {
     depends: [],
     entry: [],
     withRuntime: false,
+    from: opt.from,
   });
   await execAsync(LL_BUILDER_COMMAND, ["build"]);
   const proc = spawn(
@@ -155,6 +156,7 @@ export const resolve = async (opt: CLIResolveOption) => {
     depends: [],
     entry: [],
     withRuntime: false,
+    from: opt.from,
   });
 };
 export const resolveCommand = new Command("resolve")

@@ -26,9 +26,9 @@ export const BUILD_SCRIPT = "build.sh";
 export const INSTALL_PATCH_SCRIPT = "install_patch.sh";
 export const INSTALL_DEP_SCRIPT = "install_dep.sh";
 export const INSTALL_START_SCRIPT = "install_start.sh";
-export const DOT_GITIGNORE = "gitignore";
-export const DOT_GITIGNORE_RENAME = ".gitignore";
+export const DOT_GITIGNORE = ".gitignore";
 
-export const LL_BUILDER_COMMAND = process.env.LL_BUILDER_COMMAND??'ll-builder';
+export const LL_BUILDER_COMMAND =
+  process.env.LL_BUILDER_COMMAND ?? "ll-builder";
 
-export const SHEBANG='#!/bin/bash'
+export const SHEBANG = "#!/bin/bash";

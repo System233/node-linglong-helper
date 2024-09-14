@@ -4,6 +4,7 @@
 // https://opensource.org/licenses/MIT
 
 import {
+  joinRoot,
   joinURL,
   loadAuthConf,
   loadPackages,
@@ -48,6 +49,7 @@ export interface CLIUpdateOption {
   baseListFile?: string;
   runtimeListFile?: string;
   authConf?: string;
+  from?: string;
   quiet?: boolean;
 }
 
@@ -84,7 +86,7 @@ export const update = async (opt: CLIUpdateOption) => {
   const [basePackages, runtimePackages, excludePackages, includePackages] =
     await Promise.all([
       loadPackages(baseListFile),
-      proj.runtime ? loadPackages(runtimeListFile) : [],
+      proj.runtime ? loadPackages(runtimeListFile) : ([] as string[]),
       loadPackages(DEP_EXCLUDE_LIST, true),
       loadPackages(DEP_INCLDUE_LIST, true),
     ]);
@@ -93,6 +95,16 @@ export const update = async (opt: CLIUpdateOption) => {
     ...runtimePackages,
     ...excludePackages,
   ]);
+  if (
+    opt.from &&
+    packages.find((item) => runtimePackages.includes(item.package))
+  ) {
+    const temp = await loadYAML<IProject>(joinRoot(LINGLONG_YAML, opt.from));
+    proj.runtime = temp.runtime;
+    const runtimes = await loadPackages(runtimeListFile);
+    runtimes.forEach((item) => envPackages.add(item));
+  }
+
   const filteredPackages = packages.filter(
     (item) =>
       !envPackages.has(item.package) || includePackages.includes(item.package)
@@ -156,4 +168,5 @@ export const updateCommand = new Command("update")
   .option("--base <id/version>", "基础依赖包")
   .option("--runtime <id/version>", "Runtime依赖包")
   .option("--quiet", "不显示进度条")
+  .option("--from <DIR>", "以指定项目为模板获取文件")
   .action(update);

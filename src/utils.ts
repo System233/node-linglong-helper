@@ -159,7 +159,7 @@ export const exists = async (path: string) => {
 export const installFile = async (path: string, option?: InstallOption) => {
   const name = basename(path);
   const dest = joinRoot(option?.rename ?? name, option?.root);
-  if (await exists(dest)) {
+  if ((await exists(dest)) || !(await exists(path))) {
     return false;
   }
   await copyFile(path, dest, constants.COPYFILE_EXCL);

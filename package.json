@@ -1,7 +1,7 @@
 {
   "name": "linglong-helper",
   "type": "module",
-  "version": "0.3.1",
+  "version": "0.3.3",
   "description": "Linglong Helper CLI",
   "main": "dist/index.js",
   "repository": {

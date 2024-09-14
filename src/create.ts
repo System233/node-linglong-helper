@@ -26,7 +26,6 @@ import {
   DEP_INCLDUE_LIST,
   DEP_LIST,
   DOT_GITIGNORE,
-  DOT_GITIGNORE_RENAME,
   INSTALL_DEP_SCRIPT,
   INSTALL_START_SCRIPT,
   LINGLONG_BASE_DEFAULT,
@@ -146,7 +145,6 @@ export const create = async (rawId: string, opt: CLICreateOption) => {
         installAsset(DOT_GITIGNORE, opt.from, {
           root: id,
           mode: "644",
-          rename: DOT_GITIGNORE_RENAME,
         }),
         installAsset(INSTALL_DEP_SCRIPT, opt.from, { root: id, mode: "755" }),
         installAsset(INSTALL_START_SCRIPT, opt.from, { root: id, mode: "755" }),
