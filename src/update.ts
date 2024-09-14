@@ -56,7 +56,12 @@ export const update = async (opt: CLIUpdateOption) => {
   const sourceList = await loadSourcesList();
   const entries = sourceList.concat(opt.entry);
   const authConf = await loadAuthConf(opt.authConf || AUTH_CONF, !opt.authConf);
-  entries.forEach((item) => manager.repository.create(parseSourceEnrty(item)));
+
+  entries
+    .map((item) => parseSourceEnrty(item))
+    .filter((x) => x != null)
+    .forEach((item) => manager.repository.create(item));
+
   authConf.forEach((item) => manager.auth.conf.push(item));
   await manager.load({ quiet: opt.quiet });
   const currentDeps = opt.depends.concat(await loadPackages(DEP_LIST));
@@ -83,9 +88,11 @@ export const update = async (opt: CLIUpdateOption) => {
       loadPackages(DEP_EXCLUDE_LIST, true),
       loadPackages(DEP_INCLDUE_LIST, true),
     ]);
-  const envPackages = new Set(
-    [].concat(basePackages, runtimePackages, excludePackages)
-  );
+  const envPackages = new Set([
+    ...basePackages,
+    ...runtimePackages,
+    ...excludePackages,
+  ]);
   const filteredPackages = packages.filter(
     (item) =>
       !envPackages.has(item.package) || includePackages.includes(item.package)
@@ -126,9 +133,14 @@ export const updateCommand = new Command("update")
     "-d,--depends <depends...>",
     "追加依赖列表",
     (x, y) => y.concat(x),
-    []
+    [] as string[]
   )
-  .option("-e,--entry <entry...>", "追加APT源条目", (x, y) => y.concat(x), [])
+  .option(
+    "-e,--entry <entry...>",
+    "追加APT源条目",
+    (x, y) => y.concat(x),
+    [] as string[]
+  )
   .option("--auth-conf <FILE>", "APT auth.conf授权配置")
   .option("--cache-dir <DIR>", "APT缓存目录", ".cache")
   .option("--with-runtime", "引入默认org.deepin.Runtime")

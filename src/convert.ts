@@ -24,7 +24,7 @@ import {
 } from "./constant.js";
 
 export interface CLIConvertOption {
-  id?: string;
+  id: string;
   name?: string;
   depends: string[];
   entry: string[];
@@ -61,9 +61,10 @@ const convert = async (rawId: string, opt: CLIConvertOption) => {
     const manager = new PackageManager({
       cacheDir: opt.cacheDir || join(id, ".cache"),
     });
-    entries.forEach((item) =>
-      manager.repository.create(parseSourceEnrty(item))
-    );
+    entries
+      .map((item) => parseSourceEnrty(item))
+      .filter((x) => x != null)
+      .forEach((item) => manager.repository.create(item));
 
     const authConf = await loadAuthConf(opt.authConf);
     authConf.forEach((item) => manager.auth.conf.push(item));
@@ -109,13 +110,23 @@ const convert = async (rawId: string, opt: CLIConvertOption) => {
 export const convertCommand = new Command("convert")
   .description("创建DEB包转换项目")
   .argument("<id>", "DEB包名")
-  .option("-d,--depends <depends...>", "依赖列表", (x, y) => y.concat(x), [])
-  .option("-e,--entry <entry...>", "APT源条目", (x, y) => y.concat(x), [])
+  .option(
+    "-d,--depends <depends...>",
+    "依赖列表",
+    (x, y) => y.concat(x),
+    [] as string[]
+  )
+  .option(
+    "-e,--entry <entry...>",
+    "APT源条目",
+    (x, y) => y.concat(x),
+    [] as string[]
+  )
   .option(
     "-f,--entry-list <FILE...>",
     "APT源条目文件",
     (x, y) => y.concat(x),
-    []
+    [] as string[]
   )
   .option("--auth-conf <FILE>", "APT auth.conf授权配置")
   .option("--cache-dir <DIR>", "APT缓存目录")

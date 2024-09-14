@@ -25,7 +25,7 @@ export function IsMatchRegExp(
           return regex.test(value);
         },
         defaultMessage(validationArguments) {
-          return `${validationArguments.property}格式不正确`;
+          return `${validationArguments?.property ?? propertyName}格式不正确`;
         },
       },
     });
@@ -53,7 +53,7 @@ export function ValidateMixedType(
           return true;
         },
         defaultMessage(validationArguments) {
-          return `${validationArguments.property}类型不匹配`;
+          return `${validationArguments?.property ?? propertyName}类型不匹配`;
         },
       },
     });

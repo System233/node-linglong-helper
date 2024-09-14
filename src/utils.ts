@@ -43,12 +43,12 @@ export const saveYAML = async <T extends object = any>(
 
 export const formatValidationError = (errors: ValidationError[]) => {
   // return errors.map(item=>item.toString()).join('\n')
-  const format = (error: ValidationError, id?: string) => {
+  const format = (error: ValidationError, id?: string): string | string[] => {
     const current = id ? `${id}.${error.property}` : error.property;
     if (error.constraints) {
       return `属性 ${current}: ${Object.values(error.constraints).join(",")}`;
     }
-    return error.children.flatMap((item) => format(item, current));
+    return error.children?.flatMap((item) => format(item, current)) ?? [];
   };
   return errors.flatMap((error) => format(error)).join("\n");
 };
@@ -158,12 +158,12 @@ export const exists = async (path: string) => {
 };
 export const installFile = async (path: string, option?: InstallOption) => {
   const name = basename(path);
-  const dest = joinRoot(option.rename ?? name, option.root);
+  const dest = joinRoot(option?.rename ?? name, option?.root);
   if (await exists(dest)) {
     return false;
   }
   await copyFile(path, dest, constants.COPYFILE_EXCL);
-  if (option.mode) {
+  if (option?.mode) {
     await chmod(dest, option.mode);
   }
   return true;
@@ -187,16 +187,19 @@ export const installPatches = async (patches: string[], root?: string) => {
   const dest = joinRoot(INSTALL_PATCH_SCRIPT, root);
   const shebang = (await exists(dest)) ? "" : SHEBANG;
 
-  await writeFile(dest, [].concat(shebang, patches).join("\n"), {
+  await writeFile(dest, [shebang, ...patches].join("\n"), {
     flag: constants.O_APPEND | constants.O_CREAT | constants.O_WRONLY,
   });
   await chmod(dest, "755");
 };
 
 export const loadAuthConf = async (
-  file: string | string[],
+  file: string | string[] | undefined | null,
   noWarn?: boolean
 ): Promise<APTAuthConf[]> => {
+  if (!file) {
+    return [];
+  }
   if (Array.isArray(file)) {
     const result = await Promise.all(
       file.map((item) => loadAuthConf(item, noWarn))

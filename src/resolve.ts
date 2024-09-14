@@ -69,7 +69,12 @@ export const resolve = async (opt: CLIResolveOption) => {
   const manager = new PackageManager({ cacheDir: opt.cacheDir });
   const entries = await loadSourcesList();
   const authConf = await loadAuthConf(AUTH_CONF, true);
-  entries.forEach((item) => manager.repository.create(parseSourceEnrty(item)));
+
+  entries
+    .map((item) => parseSourceEnrty(item))
+    .filter((x) => x != null)
+    .forEach((item) => manager.repository.create(item));
+
   authConf.forEach((item) => manager.auth.conf.push(item));
   await manager.loadMetadata();
   await manager.loadContents();
@@ -110,7 +115,7 @@ export const resolve = async (opt: CLIResolveOption) => {
     console.warn("正在查找依赖:", ...list);
     const packages = await manager.find(
       `/${list.join("|")}$`,
-      opt.arch.length ? opt.arch : null
+      opt.arch.length ? opt.arch : undefined
     );
 
     const filtered = packages.filter((item) => regex.test(item.package));
@@ -154,7 +159,12 @@ export const resolve = async (opt: CLIResolveOption) => {
 };
 export const resolveCommand = new Command("resolve")
   .description(`自动化解决隐式依赖`)
-  .option("--arch <ARCH...>", "指定架构范围进行搜索", (x, y) => y.concat(x), [])
+  .option(
+    "--arch <ARCH...>",
+    "指定架构范围进行搜索",
+    (x, y) => y.concat(x),
+    [] as string[]
+  )
   .option("--match <REGEX>", "过滤包名", "^lib")
   .option("-r,--round <INT>", "最大查找轮数", parseInt, 3)
   .option("--cache-dir <DIR>", "APT缓存目录", ".cache")

@@ -42,6 +42,11 @@ const description = Object.entries(allPatches)
   .join("\n");
 export const patchCommand = new Command("patch")
   .description(`添加应用补丁`)
-  .argument(`<name...>`, `补丁列表:\n${description}`, (y, x) => x.concat(y), [])
+  .argument(
+    `<name...>`,
+    `补丁列表:\n${description}`,
+    (y, x) => x.concat(y),
+    [] as string[]
+  )
   .option("--from <DIR>", "以指定项目为模板获取文件")
   .action(patch);

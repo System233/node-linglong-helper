@@ -6,7 +6,7 @@
 import { IPackage } from "apt-cli";
 
 export const walk = <T>(
-  pkg: IPackage | IPackage[],
+  pkg: IPackage | IPackage[] | null | undefined,
   cb: (pkg: IPackage) => T,
   set: Set<string> = new Set()
 ): T[] => {

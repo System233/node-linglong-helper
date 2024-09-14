@@ -43,21 +43,21 @@ import { Command } from "commander";
 export interface CLICreateOption {
   id?: string;
   name?: string;
-  version?: string;
+  version: string;
   depends: string[];
   entry: string[];
   entryList: string[];
-  kind?: "app" | "runtime";
+  kind: "app" | "runtime";
   withRuntime: boolean;
   withLinyaps: boolean;
-  description?: string;
+  description: string;
   base?: string;
   runtime?: string;
   nolock?: boolean;
   boot?: string;
   baseListFile?: string;
   runtimeListFile?: string;
-  authConf: string;
+  authConf?: string;
   from?: string;
   includeListFile?: string;
   excludeListFile?: string;
@@ -119,7 +119,7 @@ export const create = async (rawId: string, opt: CLICreateOption) => {
         version: LINGLONG_YAML_VERSION,
         package: {
           id,
-          name: opt.name,
+          name: opt.name ?? id,
           version: opt.version,
           kind: opt.kind,
           description: opt.description,
@@ -184,13 +184,23 @@ export const create = async (rawId: string, opt: CLICreateOption) => {
 export const command = new Command("create")
   .description("创建玲珑包工程")
   .argument("<id>", "包名")
-  .option("-d,--depends <depends...>", "依赖列表", (x, y) => y.concat(x), [])
-  .option("-e,--entry <entry...>", "APT源条目", (x, y) => y.concat(x), [])
+  .option(
+    "-d,--depends <depends...>",
+    "依赖列表",
+    (x, y) => y.concat(x),
+    [] as string[]
+  )
+  .option(
+    "-e,--entry <entry...>",
+    "APT源条目",
+    (x, y) => y.concat(x),
+    [] as string[]
+  )
   .option(
     "-f,--entry-list <FILE...>",
     "APT源条目文件",
     (x, y) => y.concat(x),
-    []
+    [] as string[]
   )
   .option("--auth-conf <FILE>", "APT auth.conf授权配置")
   .option("--include-list-file <FILE>", "强包含依赖列表文件")

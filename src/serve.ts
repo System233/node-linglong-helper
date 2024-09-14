@@ -29,6 +29,10 @@ routes.push({
   path: "/sharp",
   desc: "裁剪图片,wget --method=POST --body-file=path/to/file http://localhost:3000/sharp/{WIDTH}x{HEIGHT} -O target.png",
   async handle(req, res) {
+    if (!req.url) {
+      res.writeHead(400).end();
+      return;
+    }
     const match = /\/sharp\/(\d+)x(\d+)/.exec(req.url);
     if (!match) {
       res.writeHead(400).end();
@@ -60,7 +64,7 @@ export const serve = async (opt: CLIServeOption) => {
     try {
       console.log(req.method, req.url);
       for (const item of routes) {
-        if (req.url.startsWith(item.path) && item.method == req.method) {
+        if (req.url?.startsWith(item.path) && item.method == req.method) {
           await item.handle(req, res);
           return;
         }
