@@ -15,7 +15,10 @@ const allPatches = {
   icon: "图标补丁",
   qpa: "QT QPA环境补丁",
 };
-export const patch = async (patches: string[]) => {
+export interface CLIPatchOption {
+  from?: string;
+}
+export const patch = async (patches: string[], opt: CLIPatchOption) => {
   const list = await Promise.all(
     patches.map(async (name) => {
       if (!(name in allPatches)) {
@@ -23,7 +26,7 @@ export const patch = async (patches: string[]) => {
         return null;
       }
       const patch = `./patch_${name}.sh`;
-      const ok = await installAsset(patch, { mode: "755" });
+      const ok = await installAsset(patch, opt.from, { mode: "755" });
       if (ok) {
         console.log("已添加补丁", name);
       } else {
@@ -40,4 +43,5 @@ const description = Object.entries(allPatches)
 export const patchCommand = new Command("patch")
   .description(`添加应用补丁`)
   .argument(`<name...>`, `补丁列表:\n${description}`, (y, x) => x.concat(y), [])
+  .option("--from <DIR>", "以指定项目为模板获取文件")
   .action(patch);

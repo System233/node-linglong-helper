@@ -40,7 +40,7 @@ export interface CLIUpdateOption {
   runtime?: string;
   base?: string;
 
-  cacheDir?: string;
+  cacheDir: string;
   version?: string;
   kind?: "app" | "runtime";
   description?: string;
@@ -51,7 +51,7 @@ export interface CLIUpdateOption {
   quiet?: boolean;
 }
 
-const update = async (opt: CLIUpdateOption) => {
+export const update = async (opt: CLIUpdateOption) => {
   const manager = new PackageManager({ cacheDir: opt.cacheDir });
   const sourceList = await loadSourcesList();
   const entries = sourceList.concat(opt.entry);
@@ -129,21 +129,18 @@ export const updateCommand = new Command("update")
     []
   )
   .option("-e,--entry <entry...>", "追加APT源条目", (x, y) => y.concat(x), [])
-  .option("--auth-conf <authConf>", "APT auth.conf授权配置")
-  .option("--cacheDir <cacheDir>", "APT缓存目录", ".cache")
+  .option("--auth-conf <FILE>", "APT auth.conf授权配置")
+  .option("--cache-dir <DIR>", "APT缓存目录", ".cache")
   .option("--with-runtime", "引入默认org.deepin.Runtime")
+  .option("--base-list-file <FILE>", "Base环境包列表文件,用于筛选需下载的依赖")
   .option(
-    "--base-list-file <baseListFile>",
-    "Base环境包列表文件,用于筛选需下载的依赖"
-  )
-  .option(
-    "--runtime-list-file <runtimeListFile>",
+    "--runtime-list-file <FILE>",
     "Runtime环境包列表文件,用于用于筛选需下载的依赖"
   )
   .option("--name <name>", "应用名称")
   .option("--kind <app|runtime>", "应用类型")
   .option("--version <x.x.x.x>", "版本号")
-  .option("--description <description>", "应用说明")
+  .option("--description <TEXT>", "应用说明")
   .option("--base <id/version>", "基础依赖包")
   .option("--runtime <id/version>", "Runtime依赖包")
   .option("--quiet", "不显示进度条")

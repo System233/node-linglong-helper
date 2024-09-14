@@ -6,3 +6,4 @@ src
 *.tar
 *.gz
 *.log
+tsconfig.json

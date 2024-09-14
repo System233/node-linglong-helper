@@ -3,11 +3,6 @@
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
 
-// Copyright (c) 2024 System233
-//
-// This software is released under the MIT License.
-// https://opensource.org/licenses/MIT
-
 import {
   getLinyapsName,
   joinRoot,
@@ -38,16 +33,16 @@ export interface CLIConvertOption {
   withLinyaps: boolean;
   runtime?: string;
   base?: string;
-  cacheDir?: string;
+  cacheDir: string;
   version?: string;
   kind: "app" | "runtime";
   description?: string;
   boot?: string;
   baseListFile?: string;
   runtimeListFile?: string;
-  authConf: string[];
-  includeListFile: string[];
-  excludeListFile: string[];
+  authConf?: string;
+  includeListFile?: string;
+  excludeListFile?: string;
   quiet?: boolean;
   from?: string;
 }
@@ -117,47 +112,29 @@ export const convertCommand = new Command("convert")
   .option("-d,--depends <depends...>", "依赖列表", (x, y) => y.concat(x), [])
   .option("-e,--entry <entry...>", "APT源条目", (x, y) => y.concat(x), [])
   .option(
-    "-f,--entry-list <entryList...>",
+    "-f,--entry-list <FILE...>",
     "APT源条目文件",
     (x, y) => y.concat(x),
     []
   )
+  .option("--auth-conf <FILE>", "APT auth.conf授权配置")
+  .option("--cache-dir <DIR>", "APT缓存目录")
+  .option("--base-list-file <FILE>", "Base环境包列表文件,用于筛选需下载的依赖")
   .option(
-    "--auth-conf <authConf...>",
-    "APT auth.conf授权配置",
-    (x, y) => y.concat(x),
-    []
-  )
-  .option("--cacheDir <cacheDir>", "APT缓存目录")
-  .option(
-    "--base-list-file <baseListFile>",
-    "Base环境包列表文件,用于筛选需下载的依赖"
-  )
-  .option(
-    "--runtime-list-file <runtimeListFile>",
+    "--runtime-list-file <FILE>",
     "Runtime环境包列表文件,用于用于筛选需下载的依赖"
   )
-  .option(
-    "--include-list-file <includeListFile...>",
-    "强包含依赖列表文件",
-    (x, y) => y.concat(x),
-    []
-  )
-  .option(
-    "--exclude-list-file <excludeListFile...>",
-    "排除依赖列表文件",
-    (x, y) => y.concat(x),
-    []
-  )
+  .option("--include-list-file <FILE>", "强包含依赖列表文件")
+  .option("--exclude-list-file <FILE>", "排除依赖列表文件")
   .option("--with-runtime", "引入默认org.deepin.Runtime")
   .option("--with-linyaps", "包名添加.linyaps后缀")
   .option("--boot <boot>", "启动文件路径", LINGLONG_BOOT_DEFAULT)
   .option("--name <name>", "应用名称")
   .option("--kind <app|runtime>", "应用类型")
   .option("--version <x.x.x.x>", "版本号")
-  .option("--description <description>", "应用说明")
+  .option("--description <TEXT>", "应用说明")
   .option("--base <id/version>", "基础依赖包")
   .option("--runtime <id/version>", "Runtime依赖包")
-  .option("--from <PROJECT>", "以指定项目为模板进行创建")
+  .option("--from <DIR>", "以指定项目为模板获取文件")
   .option("--quiet", "不显示进度条")
   .action(convert);

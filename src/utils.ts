@@ -168,7 +168,17 @@ export const installFile = async (path: string, option?: InstallOption) => {
   }
   return true;
 };
-export const installAsset = async (name: string, option?: InstallOption) => {
+export const installAsset = async (
+  name: string,
+  assetsDir?: string,
+  option?: InstallOption
+) => {
+  if (assetsDir) {
+    const path = join(assetsDir, name);
+    if (await installFile(path, option)) {
+      return true;
+    }
+  }
   const path = resolveAsset(name);
   return installFile(path, option);
 };

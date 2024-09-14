@@ -12,7 +12,6 @@ import {
   loadPackages,
   loadYAML,
   lockPorjectDir,
-  resolveAsset,
   savePackages,
   saveYAML,
   validateYAML,
@@ -34,6 +33,7 @@ import {
   LINGLONG_BASE_PACKAGE_LIST,
   LINGLONG_BOOT_DEFAULT,
   LINGLONG_RUNTIME_DEFAULT,
+  LINGLONG_RUNTIME_PACKAGE_LIST,
   LINGLONG_YAML,
   LINGLONG_YAML_VERSION,
   SOURCES_LIST,
@@ -57,10 +57,10 @@ export interface CLICreateOption {
   boot?: string;
   baseListFile?: string;
   runtimeListFile?: string;
-  authConf: string[];
+  authConf: string;
   from?: string;
-  includeListFile: string[];
-  excludeListFile: string[];
+  includeListFile?: string;
+  excludeListFile?: string;
 }
 export const create = async (rawId: string, opt: CLICreateOption) => {
   opt.id = rawId;
@@ -76,15 +76,9 @@ export const create = async (rawId: string, opt: CLICreateOption) => {
         }
         const yamlPath = joinRoot(LINGLONG_YAML, opt.from);
         const dependsList = joinRoot(DEP_LIST, opt.from);
-        const authConf = joinRoot(AUTH_CONF, opt.from);
         const sourcesList = joinRoot(SOURCES_LIST, opt.from);
-        const includeList = joinRoot(DEP_INCLDUE_LIST, opt.from);
-        const excludeList = joinRoot(DEP_EXCLUDE_LIST, opt.from);
         const tasks = [
-          [authConf, () => opt.authConf.push(authConf)],
           [sourcesList, () => opt.entryList.push(sourcesList)],
-          [includeList, () => opt.includeListFile.push(includeList)],
-          [excludeList, () => opt.excludeListFile.push(excludeList)],
           [
             yamlPath,
             async () => {
@@ -118,10 +112,6 @@ export const create = async (rawId: string, opt: CLICreateOption) => {
       const listEntries = await loadPackages(opt.entryList);
       const entries = opt.entry.concat(listEntries.flat());
 
-      const authConf = await loadPackages(opt.authConf);
-      const includeList = await loadPackages(opt.includeListFile);
-      const excludeList = await loadPackages(opt.excludeListFile);
-
       const yamlFile = join(id, LINGLONG_YAML);
       const cmd = `/opt/apps/${id}/files/${opt.boot || LINGLONG_BOOT_DEFAULT}`;
 
@@ -149,30 +139,39 @@ export const create = async (rawId: string, opt: CLICreateOption) => {
           `exec /project/${BUILD_SCRIPT}`,
         ].join("\n"),
       });
-      const baseListFile =
-        opt.baseListFile || resolveAsset(LINGLONG_BASE_PACKAGE_LIST);
-      const runtimeListFile =
-        opt.runtimeListFile || resolveAsset(LINGLONG_RUNTIME_DEFAULT);
       await saveYAML<IProject>(yamlFile, proj);
       await Promise.all([
         savePackages(joinRoot(SOURCES_LIST, id), entries),
         savePackages(joinRoot(DEP_LIST, id), opt.depends),
-        savePackages(joinRoot(AUTH_CONF, id), authConf),
-        installAsset(DOT_GITIGNORE, {
+        installAsset(DOT_GITIGNORE, opt.from, {
           root: id,
           mode: "644",
           rename: DOT_GITIGNORE_RENAME,
         }),
-        installAsset(INSTALL_DEP_SCRIPT, { root: id, mode: "755" }),
-        installAsset(INSTALL_START_SCRIPT, { root: id, mode: "755" }),
-        installAsset(BUILD_SCRIPT, { root: id, mode: "755" }),
-        installFile(baseListFile, { root: id, mode: "644" }),
-        (opt.runtime || opt.withRuntime || opt.runtimeListFile) &&
-          installFile(runtimeListFile, { root: id, mode: "644" }),
-        includeList.length &&
-          savePackages(joinRoot(DEP_INCLDUE_LIST, id), includeList),
-        excludeList.length &&
-          savePackages(joinRoot(DEP_EXCLUDE_LIST, id), excludeList),
+        installAsset(INSTALL_DEP_SCRIPT, opt.from, { root: id, mode: "755" }),
+        installAsset(INSTALL_START_SCRIPT, opt.from, { root: id, mode: "755" }),
+        installAsset(BUILD_SCRIPT, opt.from, { root: id, mode: "755" }),
+        opt.authConf
+          ? installFile(opt.authConf, { root: id, mode: "644" })
+          : installAsset(AUTH_CONF, opt.from, { root: id, mode: "644" }),
+        opt.includeListFile
+          ? installFile(opt.includeListFile, { root: id, mode: "644" })
+          : installAsset(DEP_INCLDUE_LIST, opt.from, { root: id, mode: "644" }),
+        opt.excludeListFile
+          ? installFile(opt.excludeListFile, { root: id, mode: "644" })
+          : installAsset(DEP_EXCLUDE_LIST, opt.from, { root: id, mode: "644" }),
+        opt.baseListFile
+          ? installFile(opt.baseListFile, { root: id, mode: "644" })
+          : installAsset(LINGLONG_BASE_PACKAGE_LIST, opt.from, {
+              root: id,
+              mode: "644",
+            }),
+        opt.runtimeListFile
+          ? installFile(opt.runtimeListFile, { root: id, mode: "644" })
+          : installAsset(LINGLONG_RUNTIME_PACKAGE_LIST, opt.from, {
+              root: id,
+              mode: "644",
+            }),
       ]);
       console.log(
         `已创建项目 ${id}, 可通过以下命令进行初始化:\n cd ${id}\n ${BIN_NAME} update`
@@ -188,45 +187,27 @@ export const command = new Command("create")
   .option("-d,--depends <depends...>", "依赖列表", (x, y) => y.concat(x), [])
   .option("-e,--entry <entry...>", "APT源条目", (x, y) => y.concat(x), [])
   .option(
-    "-f,--entry-list <entryList...>",
+    "-f,--entry-list <FILE...>",
     "APT源条目文件",
     (x, y) => y.concat(x),
     []
   )
-  .option(
-    "--auth-conf <authConf...>",
-    "APT auth.conf授权配置",
-    (x, y) => y.concat(x),
-    []
-  )
-  .option(
-    "--include-list-file <includeListFile...>",
-    "强包含依赖列表文件",
-    (x, y) => y.concat(x),
-    []
-  )
-  .option(
-    "--exclude-list-file <excludeListFile...>",
-    "排除依赖列表文件",
-    (x, y) => y.concat(x),
-    []
-  )
+  .option("--auth-conf <FILE>", "APT auth.conf授权配置")
+  .option("--include-list-file <FILE>", "强包含依赖列表文件")
+  .option("--exclude-list-file <FILE>", "排除依赖列表文件")
   .option("--with-runtime", "引入默认org.deepin.Runtime")
   .option("--with-linyaps", "包名添加.linyaps后缀")
   .option("--boot <boot>", "启动文件路径", LINGLONG_BOOT_DEFAULT)
   .option("--name <name>", "应用名称", "App Name")
   .option("--kind <app|runtime>", "应用类型", "app")
   .option("--version <x.x.x.x>", "版本号", "0.0.0.1")
-  .option("--description <description>", "应用说明", "Description")
+  .option("--description <TEXT>", "应用说明", "Description")
   .option("--base <package/version>", "基础依赖包")
   .option("--runtime <package/version>", "Runtime依赖包")
+  .option("--base-list-file <FILE>", "Base环境包列表文件,用于筛选需下载的依赖")
   .option(
-    "--base-list-file <baseListFile>",
-    "Base环境包列表文件,用于筛选需下载的依赖"
-  )
-  .option(
-    "--runtime-list-file <runtimeListFile>",
+    "--runtime-list-file <FILE>",
     "Runtime环境包列表文件,用于用于筛选需下载的依赖"
   )
-  .option("--from <PROJECT>", "以指定项目为模板进行创建")
+  .option("--from <DIR>", "以指定项目为模板获取文件")
   .action(create);
