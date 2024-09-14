@@ -89,7 +89,9 @@ export const create = async (rawId: string, opt: CLICreateOption) => {
               opt.description = opt.description ?? form.package?.description;
               opt.kind = opt.kind ?? form.package?.kind;
               opt.base = opt.base ?? form.base;
-              opt.runtime = opt.runtime ?? form.runtime;
+              opt.runtime = opt.withRuntime
+                ? opt.runtime ?? form.runtime
+                : undefined;
             },
           ],
           [
