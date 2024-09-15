@@ -99,7 +99,8 @@ export const update = async (opt: CLIUpdateOption) => {
   ]);
   if (
     opt.from &&
-    packages.find((item) => runtimePackages.includes(item.package))
+    (packages.find((item) => runtimePackages.includes(item.package)) ||
+      opt.withRuntime)
   ) {
     const temp = await loadYAML<IProject>(joinRoot(LINGLONG_YAML, opt.from));
     proj.runtime = temp.runtime;
