@@ -46,6 +46,7 @@ export interface CLIConvertOption {
   excludeListFile?: string;
   quiet?: boolean;
   from?: string;
+  retry: number;
 }
 const convert = async (rawId: string, opt: CLIConvertOption) => {
   opt.id = rawId;
@@ -61,6 +62,7 @@ const convert = async (rawId: string, opt: CLIConvertOption) => {
 
     const manager = new PackageManager({
       cacheDir: opt.cacheDir || join(id, ".cache"),
+      retry: opt.retry,
     });
     entries
       .map((item) => parseSourceEnrty(item))
@@ -71,7 +73,7 @@ const convert = async (rawId: string, opt: CLIConvertOption) => {
     const authConf = await loadAuthConf(opt.authConf);
     authConf.forEach((item) => manager.auth.conf.push(item));
 
-    await manager.load({ quiet: opt.quiet });
+    await manager.load({ quiet: opt.quiet, retry: opt.retry });
 
     const pkg = manager.resolve(opt.id, { recursive: true });
     if (!pkg) {
@@ -150,4 +152,5 @@ export const convertCommand = new Command("convert")
   .option("--runtime <id/version>", "Runtime依赖包")
   .option("--from <DIR>", "以指定项目为模板获取文件")
   .option("--quiet", "不显示进度条")
+  .option("--retry <INT>", "下载重试次数", parseInt, 10)
   .action(convert);

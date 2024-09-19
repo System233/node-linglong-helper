@@ -52,10 +52,14 @@ export interface CLIUpdateOption {
   authConf?: string;
   from?: string;
   quiet?: boolean;
+  retry: number;
 }
 
 export const update = async (opt: CLIUpdateOption) => {
-  const manager = new PackageManager({ cacheDir: opt.cacheDir });
+  const manager = new PackageManager({
+    cacheDir: opt.cacheDir,
+    retry: opt.retry,
+  });
   const sourceList = await loadSourcesList();
   const entries = sourceList.concat(opt.entry);
   const authConf = await loadAuthConf(opt.authConf || AUTH_CONF, !opt.authConf);
@@ -67,7 +71,7 @@ export const update = async (opt: CLIUpdateOption) => {
     .forEach((item) => manager.repository.create(item));
 
   authConf.forEach((item) => manager.auth.conf.push(item));
-  await manager.load({ quiet: opt.quiet });
+  await manager.load({ quiet: opt.quiet, retry: opt.retry });
   const currentDeps = opt.depends.concat(await loadPackages(DEP_LIST));
   const packages = flat(
     currentDeps.flatMap((item) => {
@@ -172,4 +176,5 @@ export const updateCommand = new Command("update")
   .option("--runtime <id/version>", "Runtime依赖包")
   .option("--quiet", "不显示进度条")
   .option("--from <DIR>", "以指定项目为模板获取文件")
+  .option("--retry <INT>", "下载重试次数", parseInt, 10)
   .action(update);

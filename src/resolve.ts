@@ -28,6 +28,7 @@ export interface CLIResolveOption {
   arch: string[];
   match: string;
   round: number;
+  retry: number;
   from: string;
 }
 const execAsync = async (cmd: string, args: string[]) => {
@@ -51,6 +52,7 @@ const runDetectDep = async (opt: CLIResolveOption) => {
     entry: [],
     withRuntime: false,
     from: opt.from,
+    retry: opt.retry,
   });
   await execAsync(LL_BUILDER_COMMAND, ["build"]);
   const proc = spawn(
@@ -67,7 +69,10 @@ const runDetectDep = async (opt: CLIResolveOption) => {
 };
 export const resolve = async (opt: CLIResolveOption) => {
   await installAsset(DETECT_DEP_SCRIPT, opt.from, { mode: "755" });
-  const manager = new PackageManager({ cacheDir: opt.cacheDir });
+  const manager = new PackageManager({
+    cacheDir: opt.cacheDir,
+    retry: opt.retry,
+  });
   const entries = await loadSourcesList();
   const authConf = await loadAuthConf(AUTH_CONF, true);
 
@@ -157,6 +162,7 @@ export const resolve = async (opt: CLIResolveOption) => {
     entry: [],
     withRuntime: false,
     from: opt.from,
+    retry: opt.retry,
   });
 };
 export const resolveCommand = new Command("resolve")
@@ -170,5 +176,6 @@ export const resolveCommand = new Command("resolve")
   .option("--match <REGEX>", "过滤包名", "^lib")
   .option("-r,--round <INT>", "最大查找轮数", parseInt, 3)
   .option("--cache-dir <DIR>", "APT缓存目录", ".cache")
+  .option("--retry <INT>", "下载重试次数", parseInt, 10)
   .option("--from <DIR>", "以指定项目为模板获取文件")
   .action(resolve);
