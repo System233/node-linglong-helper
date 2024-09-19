@@ -1,7 +1,7 @@
 {
   "name": "linglong-helper",
   "type": "module",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "description": "Linglong Helper CLI",
   "main": "dist/index.js",
   "repository": {
@@ -18,7 +18,7 @@
     "test": "tsx tests/validate.spec.ts"
   },
   "dependencies": {
-    "apt-cli": "^0.1.10",
+    "apt-cli": "^0.1.11",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "commander": "^12.1.0",
