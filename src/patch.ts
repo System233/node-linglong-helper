@@ -29,8 +29,8 @@ export const patch = async (patches: string[], opt: CLIPatchOption) => {
   const list = await Promise.all(
     patches.map(async (name) => {
       const patch = `./patch_${name}.sh`;
-      const fromPath = joinRoot(name, opt.from);
-      const assetPath = resolveAsset(name);
+      const fromPath = joinRoot(patch, opt.from);
+      const assetPath = resolveAsset(patch);
       if (!(await exists(fromPath)) && !(await exists(assetPath))) {
         console.error(`不支持补丁`, name);
         return null;
