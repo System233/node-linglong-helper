@@ -69,8 +69,9 @@ const convert = async (rawId: string, opt: CLIConvertOption) => {
     external.push(`file[digest=${info.hash}]+${rawId}`);
   }
   opt.id ||= pkgId;
-  opt.id = opt.withLinyaps ? getLinyapsName(opt.id, opt.withLinyaps) : opt.id;
-  await lockPorjectDir(opt.id, async () => {
+
+  const dir = getLinyapsName(opt.id, opt.withLinyaps);
+  await lockPorjectDir(dir, async () => {
     const listEntries = await loadPackages(opt.entryList);
     const fromEntries = opt.from
       ? await loadPackages(joinRoot(SOURCES_LIST, opt.from))
@@ -78,7 +79,7 @@ const convert = async (rawId: string, opt: CLIConvertOption) => {
     const entries = opt.entry.concat(listEntries, fromEntries);
 
     const manager = new PackageManager({
-      cacheDir: opt.cacheDir || join(opt.id, ".cache"),
+      cacheDir: opt.cacheDir || join(dir, ".cache"),
       retry: opt.retry,
     });
     entries

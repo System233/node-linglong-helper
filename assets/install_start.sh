@@ -6,7 +6,15 @@ echo Setting Application Entrypoint
 PATCH_APP_PATH="s#/opt/apps/\S+/files#${PREFIX}#g"
 PATCH_USR_PATH="s#/usr#$PREFIX#g"
 
-DESKTOP_LIST=$(dpkg --contents linglong/sources/$LINGLONG_RAW_ID*.deb | grep -oP "[^\/]+.desktop$" | paste -sd :)
+for deb_file in linglong/sources/*.deb; do
+    if [[ -f "$deb_file" ]]; then
+        pkg_name=$(dpkg-deb --info "$deb_file" | grep -m 1 "Package:" | awk '{print $2}')
+        if [[ "$pkg_name" == "$PACKAGE_NAME" ]]; then
+            echo "Found package: $pkg_name in $deb_file"
+            DESKTOP_LIST=$(dpkg --contents $deb_file | grep -oP "[^\/]+.desktop$" | paste -sd :)
+        fi
+    fi
+done
 
 rm -f error.log
 function log_error() {
