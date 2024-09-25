@@ -319,7 +319,7 @@ export const fromDebFile = async (
   option?: FetchMetadataOption
 ) => {
   const stream = await openDebStream(file, option);
-  const hash = createHash("sha1");
+  const hash = createHash("sha256");
   stream.on("data", (chunk) => hash.update(chunk));
   const archive = stream.pipe(createArchiveStream());
   let control: Record<ControlKeys, string> | null = null;
