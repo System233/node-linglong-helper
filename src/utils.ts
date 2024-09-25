@@ -124,7 +124,7 @@ export const loadPackages = async (
 export const resolveOrAsset = async (name: string, root?: string) => {
   let fromName = name;
   if (root) {
-    name = joinRoot(name, root);
+    fromName = joinRoot(name, root);
   }
   if (await exists(fromName)) {
     return fromName;
