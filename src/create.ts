@@ -25,6 +25,7 @@ import {
   DEP_EXCLUDE_LIST,
   DEP_INCLDUE_LIST,
   DEP_LIST,
+  DEP_LIST_EXTERNAL,
   DOT_GITIGNORE,
   INSTALL_DEP_SCRIPT,
   INSTALL_START_SCRIPT,
@@ -44,6 +45,7 @@ export interface CLICreateOption {
   name?: string;
   version: string;
   depends: string[];
+  external: string[];
   entry: string[];
   entryList: string[];
   kind: "app" | "runtime";
@@ -144,6 +146,8 @@ export const create = async (rawId: string, opt: CLICreateOption) => {
       await Promise.all([
         savePackages(joinRoot(SOURCES_LIST, id), [...new Set(entries)]),
         savePackages(joinRoot(DEP_LIST, id), opt.depends),
+        opt.external.length &&
+          savePackages(joinRoot(DEP_LIST_EXTERNAL, id), opt.external),
         installAsset(DOT_GITIGNORE, opt.from, {
           root: id,
           mode: "644",
@@ -174,7 +178,7 @@ export const create = async (rawId: string, opt: CLICreateOption) => {
             }),
       ]);
       console.log(
-        `已创建项目 ${id}, 可通过以下命令进行初始化:\n cd ${id}\n ${BIN_NAME} update`
+        `已创建项目 ${id}, 可通过以下命令进行初始化:\ncd ${id}\n${BIN_NAME} update`
       );
     },
     opt.nolock
@@ -199,6 +203,12 @@ export const command = new Command("create")
   .option(
     "-f,--entry-list <FILE...>",
     "APT源条目文件",
+    (x, y) => y.concat(x),
+    [] as string[]
+  )
+  .option(
+    "--external <type[options]+URL>",
+    "外部依赖",
     (x, y) => y.concat(x),
     [] as string[]
   )

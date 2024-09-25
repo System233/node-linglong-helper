@@ -14,13 +14,32 @@ import {
   writeFile,
 } from "fs/promises";
 import yaml from "yaml";
-import { InstallOption, IProject } from "./interface.js";
+import { InstallOption, IProject, ISource } from "./interface.js";
 import { plainToInstance } from "class-transformer";
 import { validate, ValidationError } from "class-validator";
-import { SOURCES_LIST, INSTALL_PATCH_SCRIPT, SHEBANG } from "./constant.js";
-import { basename, join } from "path";
+import {
+  createBzip2Stream,
+  createXZStream,
+  createGzipStream,
+  streamToBuffer,
+} from "apt-cli/dist/streams.js";
+import { fetchBlob, FetchMetadataOption } from "apt-cli/dist/utils.js";
+import { parseMetadata } from "apt-cli/dist/parsers.js";
+import {
+  SOURCES_LIST,
+  INSTALL_PATCH_SCRIPT,
+  SHEBANG,
+  DEP_LIST_EXTERNAL,
+} from "./constant.js";
+import { basename, extname, join } from "path";
 import { fileURLToPath } from "node:url";
 import { APTAuthConf, loadAPTAuthConf } from "apt-cli";
+import { createReadStream } from "fs";
+import { createArchiveStream, IArchiveEntry } from "archive-stream";
+import { Duplex, PassThrough } from "stream";
+import { createHash } from "node:crypto";
+import { createZstStream } from "./stream.js";
+import { extract } from "tar-stream";
 
 export const getLinyapsName = (x: string, withLinyaps: boolean) =>
   !withLinyaps ? x : x.endsWith(".linyaps") ? x : `${x}.linyaps`;
@@ -102,9 +121,13 @@ export const loadPackages = async (
     return [];
   }
 };
-export const resolveOrAsset = async (name: string) => {
-  if (await exists(name)) {
-    return name;
+export const resolveOrAsset = async (name: string, root?: string) => {
+  let fromName = name;
+  if (root) {
+    name = joinRoot(name, root);
+  }
+  if (await exists(fromName)) {
+    return fromName;
   }
   return resolveAsset(name);
 };
@@ -228,4 +251,119 @@ export const uniqueFilter = <T>() => {
     set.add(item);
     return true;
   };
+};
+
+export const loadExternalPackages = async () => {
+  const items = await loadPackages(DEP_LIST_EXTERNAL, true);
+  return items.flatMap((item) => {
+    const match = /(file|archive|git)(?:\[(.*?)\])?\+(\S+)/.exec(item);
+    if (!match) {
+      console.error("无效的外部依赖:", item);
+      return [];
+    }
+    const [, kind, attrs, url] = match;
+    const attr = attrs
+      ? Object.fromEntries(attrs.split(/\s+/).map((attr) => attr.split("=")))
+      : {};
+    return {
+      kind,
+      version: attr.version,
+      digest: attr.digest,
+      commit: attr.commit,
+      url,
+    } as ISource;
+  });
+};
+
+export const openDebStream = async (
+  file: string,
+  option?: FetchMetadataOption
+) => {
+  if (URL.canParse(file)) {
+    return await fetchBlob(file, null, option);
+  }
+  return createReadStream(file);
+};
+export const createExtractControlStream = (file: string): Duplex => {
+  const ext = extname(file);
+  switch (ext.toLowerCase()) {
+    case ".gz":
+      return createGzipStream();
+    case ".zst":
+    case ".zstd":
+      return createZstStream();
+    case ".bz2":
+    case ".bzip2":
+      return createBzip2Stream();
+    case ".xz":
+      return createXZStream();
+    case ".tar":
+      return new PassThrough();
+    default:
+      throw new Error("不支持的控制文件类型: " + ext);
+  }
+};
+
+export type ControlKeys =
+  | "Package"
+  | "Version"
+  | "Section"
+  | "Architecture"
+  | "Depends"
+  | "Maintainer"
+  | "Homepage"
+  | "Description";
+
+export const fromDebFile = async (
+  file: string,
+  option?: FetchMetadataOption
+) => {
+  const stream = await openDebStream(file, option);
+  const hash = createHash("sha1");
+  stream.on("data", (chunk) => hash.update(chunk));
+  const archive = stream.pipe(createArchiveStream());
+  let control: Record<ControlKeys, string> | null = null;
+  return new Promise<{ control: Record<ControlKeys, string>; hash: string }>(
+    (resolve, reject) => {
+      archive.on("data", (entry: IArchiveEntry) => {
+        if (entry.name.startsWith("control.tar")) {
+          const stream = createExtractControlStream(entry.name);
+          const tar = extract();
+          stream.pipe(tar);
+          stream.write(entry.content);
+          stream.end();
+          tar.on("entry", async (header, stream, next) => {
+            try {
+              if (header.name == "./control") {
+                const controlBuffer = await streamToBuffer(stream);
+                control = parseMetadata<ControlKeys>(
+                  controlBuffer.toString()
+                )[0];
+              }
+              next();
+            } catch (error) {
+              next(error);
+            }
+          });
+        }
+      });
+      archive.once("end", () => {
+        if (!control) {
+          throw new Error(`输入中找不到控制信息:${file}`);
+        }
+        resolve({
+          hash: hash.digest("hex"),
+          control,
+        });
+      });
+      archive.once("error", reject);
+    }
+  );
+};
+
+export const isDebFile = async (id: string) => {
+  if (URL.canParse(id) || (await exists(id))) {
+    return true;
+  }
+  return false;
 };

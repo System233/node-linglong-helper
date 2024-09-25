@@ -103,3 +103,13 @@ export interface InstallOption {
   rename?: string;
   mode?: string;
 }
+
+export interface ArchiveEntry {
+  name: string;
+  mtime: string;
+  ownerId: string;
+  groupId: string;
+  mode: string;
+  size: number;
+  content: Buffer;
+}

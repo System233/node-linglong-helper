@@ -4,7 +4,14 @@
 // https://opensource.org/licenses/MIT
 
 import { Command } from "commander";
-import { installAsset, installPatches } from "./utils.js";
+import {
+  exists,
+  installAsset,
+  installPatches,
+  joinRoot,
+  resolveAsset,
+  resolveOrAsset,
+} from "./utils.js";
 
 const allPatches = {
   ld: "LD_LIBRARY_PATH 补丁",
@@ -21,11 +28,14 @@ export interface CLIPatchOption {
 export const patch = async (patches: string[], opt: CLIPatchOption) => {
   const list = await Promise.all(
     patches.map(async (name) => {
-      if (!(name in allPatches)) {
+      const patch = `./patch_${name}.sh`;
+      const fromPath = joinRoot(name, opt.from);
+      const assetPath = resolveAsset(name);
+      if (!(await exists(fromPath)) && !(await exists(assetPath))) {
         console.error(`不支持补丁`, name);
         return null;
       }
-      const patch = `./patch_${name}.sh`;
+      // const patch = `./patch_${name}.sh`;
       const ok = await installAsset(patch, opt.from, { mode: "755" });
       if (ok) {
         console.log("已添加补丁", name);
@@ -44,7 +54,7 @@ export const patchCommand = new Command("patch")
   .description(`添加应用补丁`)
   .argument(
     `<name...>`,
-    `补丁列表:\n${description}`,
+    `内置补丁列表:\n${description}`,
     (y, x) => x.concat(y),
     [] as string[]
   )

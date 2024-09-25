@@ -4,3 +4,10 @@ node_modules
 *.tar
 *.gz
 *.log
+.cache
+linglong
+*.swp
+*.layer
+*.uab
+*.uabBuild
+extraLibs.uab.yaml

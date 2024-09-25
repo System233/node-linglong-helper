@@ -8,3 +8,4 @@ src
 *.log
 tsconfig.json
 !assets/.gitignore
+.cache

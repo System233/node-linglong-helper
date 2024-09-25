@@ -7,6 +7,7 @@ import {
   joinRoot,
   joinURL,
   loadAuthConf,
+  loadExternalPackages,
   loadPackages,
   loadSourcesList,
   loadYAML,
@@ -116,11 +117,18 @@ export const update = async (opt: CLIUpdateOption) => {
     (item) =>
       !envPackages.has(item.package) || includePackages.includes(item.package)
   );
-  proj.sources = filteredPackages.map((item) => ({
-    kind: "file",
-    url: joinURL(item.repository.url, item.filename),
-    digest: item.hash.sha256,
-  }));
+
+  proj.sources = [
+    ...(await loadExternalPackages()),
+    ...filteredPackages.map(
+      (item) =>
+        ({
+          kind: "file",
+          url: joinURL(item.repository.url, item.filename),
+          digest: item.hash.sha256,
+        } as const)
+    ),
+  ];
 
   proj.base = opt.base ?? proj.base;
   proj.runtime =

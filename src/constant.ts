@@ -9,6 +9,7 @@ export const DEP_EXCLUDE_LIST = "deps.exclude.list";
 export const DEP_INCLDUE_LIST = "deps.include.list";
 export const DEP_LIST_GENERATED = "deps.generated.list";
 export const DEP_LIST_ALL = "deps.all.list";
+export const DEP_LIST_EXTERNAL = "deps.external.list";
 
 export const DETECT_DEP_SCRIPT = "detect_dep.sh";
 export const SOURCES_LIST = "sources.list";

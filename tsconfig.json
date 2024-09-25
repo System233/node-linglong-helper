@@ -4,6 +4,8 @@
     "declaration": true,
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
+    "target": "ESNext",
+    "lib": ["ESNext"],
     "strict": true,
     "experimentalDecorators": true,
     "strictPropertyInitialization": false
