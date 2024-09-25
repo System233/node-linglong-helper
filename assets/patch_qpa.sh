@@ -3,8 +3,13 @@
 
 echo Applying Patch: qpa
 
-QT_PLATFORM_PATH="$PREFIX/lib/x86_64-linux-gnu/qt5/platforms"
+QT_LIB=$(expr $PREFIX/lib/x86_64-linux-gnu/qt*/ )
+QT_PLATFORM_PATH="$QT_LIB/plugins/platforms"
+if [ ! -e "$QT_PLATFORM_PATH" ];then
+    QT_PLATFORM_PATH="$QT_LIB/platforms"
+fi
 if [ -d "$QT_PLATFORM_PATH" ]; then
     echo Patch QT_QPA_PLATFORM_PLUGIN_PATH
     echo "export QT_QPA_PLATFORM_PLUGIN_PATH=$QT_PLATFORM_PATH" | tee -a $LINGLONG_COMMAND
 fi
+
