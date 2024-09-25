@@ -90,6 +90,18 @@ ll-builder run                  # 测试运行
 | install_start.sh      | 是          | 程序入口生成脚本                                                                 |
 | patch\_\*.sh          | 否          | 补丁脚本                                                                         |
 
+## env.sh 构建变量
+
+| 名称             | 说明                                            |
+| ---------------- | ----------------------------------------------- |
+| SHELL_CMD        | 应用入口文件，如 ELF、shell 脚本、python 脚本等 |
+| SHELL_EXEC       | 执行命令使用的解释器                            |
+| ENABLE_USR_PATCH | 若入口文件为脚本，修复其中/usr 路径             |
+
+## 注意
+
+- 不要使用 yarn ll-helper 方法运行，因为 CWD 不在当前目录。
+
 ## LICENSE
 
 [MIT LICENSE](./LICENSE)
